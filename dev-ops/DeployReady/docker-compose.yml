@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    # Map port 3000 on the host to port 3000 on the container as required.
+    ports:
+      - "3000:3000"
+    
+    # Automatically inject all variables from the .env file into the container.
+    env_file:
+      - .env
+    
+    # Ensure the container automatically restarts if the app crashes or the host reboots.
+    restart: unless-stopped
