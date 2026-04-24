@@ -1,5 +1,3 @@
-# Private object storage for Vela Payments — versioning on, all public access blocked at bucket level.
-
 resource "aws_s3_bucket" "assets" {
   bucket = var.s3_bucket_name
 }
