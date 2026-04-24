@@ -30,7 +30,7 @@ jobs:
       # If this fails, the pipeline stops immediately.
       - name: Run Tests
         run: |
-          cd app
+          cd dev-ops/DeployReady/app
           npm ci
           npm test
 
