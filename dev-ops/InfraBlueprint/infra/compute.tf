@@ -91,7 +91,7 @@ resource "aws_security_group" "web_sg" {
 # Upload the public key to AWS
 resource "aws_key_pair" "web_key" {
   key_name   = "vela-web-key"
-  public_key = file("${path.module}/vela-key.pub") 
+  public_key = file("${path.module}/vela-key.pub")
 }
 
 resource "aws_instance" "web" {
