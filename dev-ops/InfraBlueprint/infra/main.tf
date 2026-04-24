@@ -1,21 +1,12 @@
-# terraform {
-#   required_version = ">= 1.5"
+module "networking" {
+  source   = "./modules/networking"
+  vpc_cidr = var.vpc_cidr
+}
 
-#   required_providers {
-#     aws = {
-#       source  = "hashicorp/aws"
-#       version = "~> 6.0"
-#     }
-#   }
+module "compute" {
+  source           = "./modules/compute"
+  vpc_id           = module.networking.vpc_id
+  public_subnet_id = module.networking.public_subnet_1_id
+  allowed_ssh_cidr = var.allowed_ssh_cidr
+}
 
-# Uncomment and configure once your S3 backend bucket exists.
-# backend "s3" {
-#   bucket = "your-terraform-state-bucket"
-#   key    = "vela-payments/terraform.tfstate"
-#   region = var.aws_region
-# }
-# }
-
-# provider "aws" {
-#   region = var.aws_region
-# }
