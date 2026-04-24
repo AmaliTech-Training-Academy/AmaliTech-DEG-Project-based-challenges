@@ -1,11 +1,5 @@
 # Data tier: PostgreSQL in private subnets, reachable only from the web security group on 5432.
 
-# Validates at plan time that the requested PostgreSQL 15.x engine version exists in the target region.
-data "aws_rds_engine_version" "postgres" {
-  engine  = "postgres"
-  version = "15.12"
-}
-
 resource "aws_security_group" "db_sg" {
   name        = "vela-db-sg"
   description = "Allow Postgres inbound only from web tier"
@@ -35,8 +29,8 @@ resource "aws_db_subnet_group" "main" {
 
 resource "aws_db_instance" "main" {
   identifier                 = "vela-db"
-  engine                     = data.aws_rds_engine_version.postgres.engine
-  engine_version             = data.aws_rds_engine_version.postgres.version
+  engine                     = "postgres"
+  engine_version             = "15"
   instance_class             = "db.t3.micro"
   allocated_storage          = 20
   storage_type               = "gp3"
