@@ -30,7 +30,7 @@ jobs:
       # If this fails, the pipeline stops immediately.
       - name: Run Tests
         run: |
-          cd dev-ops/DeployReady/app
+          cd app
           npm ci
           npm test
 
@@ -46,11 +46,26 @@ jobs:
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./dev-ops/DeployReady
+          context: .
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/deployready-kora-app:${{ github.sha }}
 
-      # 6. Connect to the EC2 server via SSH, pull the new image, and run it
+      # 6. Open the AWS Security Group for the GitHub Runner
+      - name: Authorize GitHub Runner IP in Security Group
+        run: |
+          RUNNER_IP=$(curl -s https://checkip.amazonaws.com)
+          echo "Authorizing IP: $RUNNER_IP"
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.AWS_SG_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${RUNNER_IP}/32 \
+            --region ${{ secrets.AWS_REGION }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # 7. Connect to the EC2 server via SSH, pull the new image, and run it
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -70,3 +85,19 @@ jobs:
             
             # Start the new container on port 80 (HTTP)
             docker run -d --name kora-app --restart unless-stopped -p 80:3000 -e PORT=3000 ghcr.io/${{ github.repository_owner }}/deployready-kora-app:${{ github.sha }}
+
+      # 8. Close the AWS Security Group (Always runs, even if the deploy fails)
+      - name: Revoke GitHub Runner IP from Security Group
+        if: always() 
+        run: |
+          RUNNER_IP=$(curl -s https://checkip.amazonaws.com)
+          echo "Revoking IP: $RUNNER_IP"
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.AWS_SG_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${RUNNER_IP}/32 \
+            --region ${{ secrets.AWS_REGION }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
