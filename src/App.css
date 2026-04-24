@@ -1,0 +1,13 @@
+:root{
+    --bg-void: #1e1e1e;
+}
+
+App {
+    background-color: var(--bg-void);
+    color: black;
+    font-family: 'Syne', sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
