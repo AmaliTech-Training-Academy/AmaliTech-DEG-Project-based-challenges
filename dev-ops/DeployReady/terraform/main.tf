@@ -24,7 +24,7 @@ data "aws_ami" "amazon_linux_2023" {
   }
 }
 
-# Create a Security Group
+# Create a Security Group with Strict Compliance
 resource "aws_security_group" "api_sg" {
   name        = "deployready_api_sg"
   description = "Allow SSH and HTTP inbound traffic"
@@ -38,7 +38,7 @@ resource "aws_security_group" "api_sg" {
   }
 
   ingress {
-    description = "HTTP for API"
+    description = "HTTP for APP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -54,7 +54,7 @@ resource "aws_security_group" "api_sg" {
   }
 }
 
-# Provision the actual EC2 Server
+# Provision the EC2 Server
 resource "aws_instance" "app_server" {
   ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = "t3.micro" # t2.micro instance type is not eligible for Free Tier
@@ -75,41 +75,4 @@ resource "aws_instance" "app_server" {
   tags = {
     Name = "DeployReady-API-Server"
   }
-}
-
-# Create an IAM User for the CI/CD Pipeline
-resource "aws_iam_user" "github_actions_user" {
-  name = "deployready-pipeline-user"
-  path = "/system/"
-}
-
-# Generate Access Keys for the Pipeline User
-resource "aws_iam_access_key" "github_actions_keys" {
-  user = aws_iam_user.github_actions_user.name
-}
-
-# Attach a strict Least-Privilege Policy to the User
-resource "aws_iam_user_policy" "pipeline_policy" {
-  name = "DeployReady-EC2-Minimal-Access"
-  user = aws_iam_user.github_actions_user.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = "ec2:DescribeInstances"
-        Resource = "*"
-      },
-      {
-        Effect   = "Allow"
-        Action   = [
-          "ec2:StartInstances",
-          "ec2:StopInstances"
-        ]
-        # This explicitly restricts the pipeline to ONLY touch this exact server
-        Resource = aws_instance.app_server.arn 
-      }
-    ]
-  })
 }
