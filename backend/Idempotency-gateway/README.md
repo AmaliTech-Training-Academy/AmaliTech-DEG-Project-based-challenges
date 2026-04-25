@@ -37,12 +37,14 @@ pip install fastapi uvicorn
 uvicorn main:app --reload
 ```
 
-### Interactive API Docs
+### Interactive API Swagger Docs
 
-```
+``` for local 
 http://localhost:8000/docs
 ```
-
+``` for Deployed live on Render
+https://amalitech-deg-project-based-challenges-a1rw.onrender.com/docs
+```
 ---
 
 ## Project Structure
