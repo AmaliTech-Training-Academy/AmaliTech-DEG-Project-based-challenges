@@ -1,31 +1,34 @@
-# DEG Project Challenges
+# AmaliTech DEG Backend Challenges
 
-This repository contains the DEG training project challenges across multiple tracks:
+This repository contains my backend solutions for the AmaliTech DEG project-based challenges.
 
-- Backend
-- Data Engineering
-- Fullstack
-- QA
-- DevOps
+## Projects
 
-Each challenge is self-contained inside its folder and includes its own README with task details.
+### 1. Idempotency Gateway
+Ensures that payment requests are processed only once, even if retried multiple times.
 
-## Applicant Guide
+Location: backend/idempotency-gateway
 
-If you are applying, start by choosing the challenge folder that matches your track or assigned task. Then open the README inside that folder.
+---
 
-The challenge-specific README files include:
+### 2. Pulse-Check API
+Monitors remote devices using heartbeat signals and triggers alerts when devices go offline.
 
-- Challenge description and requirements
-- Expected deliverables
-- Submission guidelines and deadlines (where applicable)
-- Any setup instructions or constraints
+Location: backend/pulse-check-api
 
-## Where To Start
+---
 
-1. Open the relevant track folder (for example, `backend/`, `data-engineering/`, or `fullstack/`).
-2. Enter the challenge project folder.
-3. Read that project's `README.md` completely before starting work.
-4. Follow the listed deliverables and submission instructions exactly.
+## Tech Stack
+- Java
+- Spring Boot
+- REST APIs
 
-If instructions differ between this root README and a challenge README, treat the challenge README as the source of truth.
+---
+
+## How to Run
+
+Each project is independent:
+
+```bash
+cd backend/idempotency-gateway
+mvn spring-boot:run
