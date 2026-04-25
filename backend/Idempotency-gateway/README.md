@@ -1,155 +1,397 @@
-# Idempotency-Gateway (The "Pay-Once" Protocol)
+# Idempotency Gateway
 
-This challenge is designed to test your ability to bridge Computer Science fundamentals with Modern Backend Engineering.
-
-## 1. Business Context
-
-> **Client:** _FinSafe Transactions Ltd._ (A fast-growing Payment Processor).
-
-### The Problem
-
-FinSafe's clients (e-commerce shops) occasionally experience network timeouts. When this happens, their servers automatically retry sending payment requests. Recently, this has led to a critical issue: **Double Charging**.
-
-If a customer clicks "Pay," the request is sent, but the network lags. The client retries the request. FinSafe processes _both_ requests, charging the customer twice. This is causing customer churn and regulatory headaches.
-
-### The Solution
-
-FinSafe needs you to build an **Idempotency Layer**. This is a middleware service (or API) that ensures no matter how many times a client sends the same request, the payment is processed **exactly once**.
+A payment processing API that guarantees every payment is processed **exactly once**, no matter how many times the client retries.
 
 ---
 
-## 2. Technical Objective
+## The Problem
 
-Build a RESTful API that mimics a payment processing backend. It must check for a unique `Idempotency-Key` in the HTTP headers.
+FinSafe's e-commerce clients occasionally experience network timeouts. When this happens, their servers automatically retry the payment request. Without a safeguard, FinSafe processes both the original and the retry as independent payments — charging the customer twice.
 
-- **First Request:** Process the payment and save the response.
-- **Duplicate Request:** Detect the existing key and return the _saved_ response immediately, without processing the payment again.
-
----
-
-## 3. Getting Started
-
-1.  **Fork this Repository:** Do not clone it directly. Create a fork to your own GitHub account.
-2.  **Environment:** You may use **Node.js, Python, Java or Go, etc.**. You may use any database or in-memory store (Redis, SQLite, or a simple native Map/Dictionary variable).
-3.  **Submission:** Your final submission will be a link to your forked repository containing the source code and documentation.
+**The result:** customer disputes, regulatory issues, and churn.
 
 ---
 
-## 4. The Architecture Diagram
+## The Solution
 
-**Task:** Before you write any code, you must design the logic flow.
-**Deliverable:** A **Sequence Diagram** or **Flowchart** included in your README.
-
----
-
-## 5. User Stories & Acceptance Criteria
-
-### User Story 1: The First Transaction (Happy Path)
-
-**As a** client system (e.g., an online store),
-**I want to** send a payment request with a unique ID,
-**So that** my transaction is processed successfully.
-
-**Acceptance Criteria:**
-
-- [ ] The API accepts a `POST` request to endpoint `/process-payment`.
-- [ ] The request header must contain `Idempotency-Key: <some-unique-string>`.
-- [ ] The request body accepts a JSON object (e.g., `{"amount": 100, "currency": "GHS"}`).
-- [ ] The server simulates processing (e.g., a 2-second delay) and returns a `200 OK` or `201 Created` response.
-- [ ] The response body should include a status message: `"Charged 100 GHS"`.
-
-### User Story 2: The Duplicate Attempt (Idempotency Logic)
-
-**As a** client system,
-**I want to** safely retry a request if I don't hear back,
-**So that** I don't accidentally double-charge the user.
-
-**Acceptance Criteria:**
-
-- [ ] If the client sends a second `POST` request with the **same** `Idempotency-Key` and payload:
-  - [ ] The server must **NOT** run the processing logic again (no 2-second delay).
-  - [ ] The server must return the **exact same** response body and status code as the first successful request.
-  - [ ] The server returns a header `X-Cache-Hit: true` to indicate this was a replayed response.
-
-### User Story 3: Different Request, Same Key (Fraud/Error Check)
-
-**As a** security officer,
-**I want to** reject requests that reuse keys for different payments,
-**So that** we maintain data integrity.
-
-**Acceptance Criteria:**
-
-- [ ] If a request arrives with an existing `Idempotency-Key` but a **different** request body (e.g., changing amount from 100 to 500):
-  - [ ] The server must return a `422 Unprocessable Entity` or `409 Conflict` error.
-  - [ ] The error message should state: `"Idempotency key already used for a different request body."`
+Every payment request is sent with a unique `Idempotency-Key` header. The server uses this key to detect retries and return the original result instead of processing again. No matter how many times a client retries, the payment executes exactly once.
 
 ---
 
-## 6. Bonus User Story (The "In-Flight" Check)
+## Getting Started
 
-**As a** system architect,
-**I want to** handle cases where two identical requests arrive at the exact same time,
-**So that** we don't succumb to race conditions.
+### Requirements
 
-**Scenario:** Request A arrives. While Request A is still "processing" (during the 2-second delay), Request B (same key) arrives.
+- Python 3.10+
+- pip
 
-**Acceptance Criteria:**
+### Installation
 
-- [ ] Request B should not start a new process.
-- [ ] Request B should not return `409 Conflict`.
-- [ ] Request B should wait (block) until Request A finishes, and then return the result of Request A.
+```bash
+pip install fastapi uvicorn
+```
+
+### Run the Server
+
+```bash
+uvicorn main:app --reload
+```
+
+### Interactive API Swagger Docs
+
+``` for local 
+http://localhost:8000/docs
+```
+``` for Deployed live on Render
+https://amalitech-deg-project-based-challenges-a1rw.onrender.com/docs
+```
+---
+
+## Project Structure
+
+```
+├── main.py       # FastAPI app and all route handlers
+├── store.py      # In-memory payment store with locking
+├── models.py     # Pydantic request, response, and audit models
+├── audit.py      # Immutable audit log — one entry per request
+└── README.md
+```
 
 ---
 
-## 7. The "Developer's Choice" Challenge
+## How It Works
 
-We believe great engineers are also product thinkers.
+### The Idempotency Key
 
-**Task:** Identify **one** additional feature or safety mechanism that would make this system better for a real-world Fintech company.
+The client generates a unique key (e.g. a UUID) for each payment intent and sends it as a request header:
 
-1.  **Implement it.**
-2.  **Document it:** Explain _why_ you added it in your README.
+```
+Idempotency-Key: my-key-001 as string 
+```
 
----
+The same key is sent on every retry of the same payment. The server uses this key to look up whether it has already processed this request.
 
-## 8. Documentation Requirements
+### The Locking System
 
-Your final `README.md` must replace these instructions. It must cover:
+Two layers of locking prevent race conditions when multiple retries arrive simultaneously:
 
-1.  **Architecture Diagram**
-2.  **Setup Instructions**
-3.  **API Documentation**
-4.  **Design Decisions**
-5.  **The Developer's Choice:** Description of the extra feature you added.
+- **Global lock** — used only to safely create per-key locks without a race
+- **Per-key lock** — one lock per idempotency key, serializes concurrent arrivals for the same payment
 
----
+This means two retries of the same payment arriving at the exact same millisecond will not double-charge. The first one processes, the second one waits, then receives the first one's result.
 
-Submit your repo link via the [online](https://forms.cloud.microsoft/e/bLyGT3byxx) form.
+### The Body Hash
 
----
+Every request body is fingerprinted with SHA-256 at arrival. This hash is stored alongside the payment entry. If a client reuses a key with a different amount, the hashes will not match and the request is rejected — protecting against both bugs and fraud.
 
-## 🛑 Pre-Submission Checklist
+### The Audit Log
 
-**WARNING:** Before you submit your solution, you **MUST** pass every item on this list.
-If you miss any of these critical steps, your submission will be **automatically rejected** and you will **NOT** be invited to an interview.
-
-### 1. 📂 Repository & Code
-
-- [ ] **Public Access:** Is your GitHub repository set to **Public**? (We cannot review private repos).
-- [ ] **Clean Code:** Did you remove unnecessary files (like `node_modules`, `.env` with real keys, or `.DS_Store`)?
-- [ ] **Run Check:** if we clone your repo and run `npm start` (or equivalent), does the server start immediately without crashing?
-
-### 2. 📄 Documentation (Crucial)
-
-- [ ] **Architecture Diagram:** Did you include a visual Diagram (Flowchart or Sequence Diagram) in the README?
-- [ ] **README Swap:** Did you **DELETE** the original instructions (the problem brief) from this file and replace it with your own documentation?
-- [ ] **API Docs:** Is there a clear list of Endpoints and Example Requests in the README?
-
-### 3. 🧹 Git Hygiene
-
-- [ ] **Commit History:** Does your repo have multiple commits with meaningful messages? (A single "Initial Commit" is a red flag).
+Every request that touches the API — whether processed, duplicated, rejected, or invalid — produces exactly one immutable audit entry. Entries are never edited or deleted. This provides a permanent decision trail for every payment attempt.
 
 ---
 
-**Ready?**
-If you checked all the boxes above, submit your repository link in the application form. Good luck! 🚀
+## API Reference
+
+### `POST /process-payment`
+
+Process a payment. Guaranteed to execute at most once per `Idempotency-Key`.
+
+**Headers**
+
+| Header | Required | Description |
+|---|---|---|
+| `Idempotency-Key` | Yes | Unique string per payment intent |
+| `Content-Type` | Yes | Must be `application/json` |
+
+**Request Body**
+
+```json
+{
+  "amount": 100.00,
+  "currency": "GHS"
+}
+```
+
+| Field | Type | Rules |
+|---|---|---|
+| `amount` | float | Required, must be greater than 0 |
+| `currency` | string | Required, exactly 3 characters (e.g. `GHS`, `USD`) |
+
+**Response Codes**
+
+| Code | Meaning |
+|---|---|
+| `201` | Payment processed successfully — first time this key was seen |
+| `200` | Duplicate request — cached result returned, no charge made |
+| `400` | Missing `Idempotency-Key` header |
+| `422` | Key already used for a different request body |
+| `500` | Unexpected server error |
+
+**Success Response (201)**
+
+```json
+{
+  "status": "success",
+  "message": "Charged 100.0 GHS",
+  "idempotency_key": "my-key-001",
+  "amount": 100.0,
+  "currency": "GHS"
+}
+```
+
+**Duplicate Response (200)**
+
+Identical body to the original 201, with an added response header:
+
+```
+X-Cache-Hit: true
+```
+
+---
+
+### `GET /audit-log`
+
+Returns the full audit trail of every request that touched the API, oldest first.
+
+**Response**
+
+```json
+[
+  {
+    "id": 1,
+    "timestamp": "2026-04-24T18:00:00Z",
+    "idempotency_key": "my-key-001",
+    "amount": 100.0,
+    "currency": "GHS",
+    "outcome": "PROCESSED",
+    "status_code": 201
+  },
+  {
+    "id": 2,
+    "timestamp": "2026-04-24T18:00:05Z",
+    "idempotency_key": "my-key-001",
+    "amount": 100.0,
+    "currency": "GHS",
+    "outcome": "DUPLICATE",
+    "status_code": 200
+  }
+]
+```
+
+**Audit Outcomes**
+
+| Outcome | Meaning | HTTP Code |
+|---|---|---|
+| `PROCESSED` | First request — payment executed | 201 |
+| `DUPLICATE` | Same key + same body — served from cache | 200 |
+| `CONFLICT` | Same key + different body — rejected | 422 |
+| `IN_FLIGHT` | Waited for concurrent request, returned its result | 200 |
+| `INVALID` | Missing header or bad input | 400 |
+
+---
+
+### `GET /store-stats`
+
+Returns a summary of keys currently held in memory.
+
+**Response**
+
+```json
+{
+  "total_keys": 10,
+  "active_keys": 8,
+  "expired_keys": 2,
+  "ttl_seconds": 86400
+}
+```
+
+---
+
+### `GET /health`
+
+Health check endpoint.
+
+**Response**
+
+```json
+{
+  "status": "ok"
+}
+```
+
+---
+
+## Scenarios
+
+### Scenario 1 — Normal Payment
+
+```
+Client → POST /process-payment (Idempotency-Key: key-001, amount: 100)
+Server → 201 — payment processed, result stored against key-001
+```
+
+### Scenario 2 — Safe Retry
+
+```
+Client → POST /process-payment (Idempotency-Key: key-001, amount: 100)
+Server → 200 — duplicate detected, cached result returned, no charge
+```
+
+### Scenario 3 — Concurrent Retries (Race Condition)
+
+```
+Client → POST /process-payment (key-001, amount: 100)  ─┐ same millisecond
+Client → POST /process-payment (key-001, amount: 100)  ─┘
+
+Request A → acquires lock → processes payment → 201
+Request B → waits → receives Request A result → 200
+
+One charge. Two valid responses.
+```
+
+### Scenario 4 — Fraud / Bug Detection
+
+```
+Client → POST /process-payment (Idempotency-Key: key-001, amount: 500)
+Server → 422 — key-001 was already committed to amount: 100
+```
+
+### Scenario 5 — Missing Header
+
+```
+Client → POST /process-payment (no Idempotency-Key header)
+Server → 400 — missing required header
+```
+
+---
+
+## Developer's Choice Feature — Payment Audit Log
+
+### Why This Was Added
+
+In production Fintech, regulators require a complete record of every payment decision. If a customer disputes a charge, the operations team needs to answer: was this a duplicate? Was it rejected? Was it processed twice due to a bug?
+
+Without an audit log, none of these questions can be answered after the fact.
+
+### What It Does
+
+Every request that enters the API produces exactly one audit entry at the moment the response is returned. The entry is immutable — it cannot be edited or deleted. The log is append-only.
+
+This means:
+
+- Every successful payment is permanently recorded as `PROCESSED`
+- Every retry is permanently recorded as `DUPLICATE`
+- Every fraud or bug attempt is permanently recorded as `CONFLICT`
+- Every missing-header request is permanently recorded as `INVALID`
+- The full timeline of any payment key can be reconstructed from the log at any time
+
+### Design Decisions
+
+**One entry per request, no exceptions** — the log call happens at every return point in the payment handler. There is no code path that exits without writing to the log.
+
+**Immutable entries** — `get_log()` returns a shallow copy of the internal list. Callers cannot modify the log by mutating the returned value.
+
+**Strict outcome enum** — outcomes are enforced by Python's `Enum` class. It is impossible to log an outcome that is not one of the five defined values.
+
+**Separated from payment logic** — `audit.py` has no knowledge of the store, the locks, or the payment flow. It only receives the outcome and metadata at the moment of response. This means the audit layer can never interfere with payment processing.
+
+---
+
+## Sequence Diagram
+
+This diagram shows every possible flow through the gateway. Each flow ends with an audit log entry — written once, never deleted.
+
+> I used Mermaid cause it is preferable with github .
+
+```mermaid
+sequenceDiagram
+    participant C  as Client
+    participant G  as Gateway
+    participant S  as Store
+    participant AL as Audit Log
+
+    %% ─────────────────────────────────────────
+    %% Flow 1 — Brand new payment
+    %% Client sends a key the server has never seen
+    %% ─────────────────────────────────────────
+    Note over C,AL: Flow 1 — Brand new payment (first time this key is seen)
+
+    C  ->> G  : POST /process-payment + Idempotency-Key header
+    G  ->> S  : Does this key exist?
+    S  -->> G : No — never seen before
+    G  ->> S  : Save key, mark status as "processing"
+    Note over G: Gateway processes the payment (2 second window)
+    G  ->> S  : Save result, mark status as "done"
+    G  ->> AL : Write audit entry — outcome: PROCESSED, status: 201
+    G  -->> C : 201 Created — payment successful
+
+    %% ─────────────────────────────────────────
+    %% Flow 2 — Safe retry
+    %% Client resends the exact same request after a timeout
+    %% ─────────────────────────────────────────
+    Note over C,AL: Flow 2 — Safe retry (same key, same amount — network timeout recovery)
+
+    C  ->> G  : POST /process-payment (same key, same body)
+    G  ->> S  : Does this key exist?
+    S  -->> G : Yes — already done, body hash matches
+    G  ->> AL : Write audit entry — outcome: DUPLICATE, status: 200
+    G  -->> C : 200 OK — X-Cache-Hit: true (not charged again)
+
+    %% ─────────────────────────────────────────
+    %% Flow 3 — Two retries arrive at the same time
+    %% Gateway blocks the second until the first finishes
+    %% ─────────────────────────────────────────
+    Note over C,AL: Flow 3 — Concurrent retries (two requests arrive at the exact same millisecond)
+
+    C  ->> G  : Request A — POST (key-002)
+    G  ->> S  : Save key, mark as processing
+    C  ->> G  : Request B — POST (same key, same body, same time)
+    G  ->> S  : Does this key exist?
+    S  -->> G : Yes — still processing
+    Note over G: Request B calls event.wait() — it blocks here without crashing
+    G  ->> S  : A finishes — save result, fire completion signal
+    G  ->> AL : Write audit entry — outcome: PROCESSED, status: 201 (for A)
+    G  -->> C : Request A → 201 Created
+    Note over G: Request B wakes up and reads A's saved result
+    G  ->> AL : Write audit entry — outcome: IN_FLIGHT, status: 200 (for B)
+    G  -->> C : Request B → 200 OK — same result, no double charge
+
+    %% ─────────────────────────────────────────
+    %% Flow 4 — Conflict
+    %% Same key reused with a different amount (fraud or client bug)
+    %% ─────────────────────────────────────────
+    Note over C,AL: Flow 4 — Conflict (same key, different amount — possible fraud or bug)
+
+    C  ->> G  : POST /process-payment (key-001, amount: 500)
+    G  ->> S  : Does this key exist?
+    S  -->> G : Yes — done, but the body hash does not match
+    G  ->> AL : Write audit entry — outcome: CONFLICT, status: 422
+    G  -->> C : 422 Unprocessable Entity — key already committed to a different amount
+
+    %% ─────────────────────────────────────────
+    %% Flow 5 — Missing header
+    %% Client forgot to send the Idempotency-Key header
+    %% ─────────────────────────────────────────
+    Note over C,AL: Flow 5 — Missing header (client forgot to include Idempotency-Key)
+
+    C  ->> G  : POST /process-payment (no Idempotency-Key header)
+    Note over G: Rejected immediately — store is never contacted
+    G  ->> AL : Write audit entry — outcome: INVALID, status: 400
+    G  -->> C : 400 Bad Request — missing required header
+```
+
+### Reading the diagram
+
+**Solid arrows** `→` mean a request is being sent.
+**Dashed arrows** `-->` mean a response is being returned.
+**Audit log arrows** appear at every response point — one entry is always written, no matter what happened.
+
+### What each audit outcome means
+
+| Outcome | When it happens | HTTP code |
+|---|---|---|
+| `PROCESSED` | First time a key is seen — payment executed | 201 |
+| `DUPLICATE` | Retry with same key and same body — served from cache | 200 |
+| `IN_FLIGHT` | Second concurrent request waited and got the first one's result | 200 |
+| `CONFLICT` | Same key reused with a different amount — rejected | 422 |
+| `INVALID` | No `Idempotency-Key` header sent — rejected immediately | 400 |
