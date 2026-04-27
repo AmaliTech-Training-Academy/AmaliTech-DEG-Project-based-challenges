@@ -17,7 +17,7 @@ Veridi Logistics has a systemic delivery accuracy problem affecting customer sat
 |  **Notebook (Google Colab)** | https://colab.research.google.com/drive/1eyohcz2Es1zg1-mPfAUhcdIFJxsS_hVv?usp=sharing |
 |  **Dashboard (Tableau Public)** | https://public.tableau.com/app/profile/ingabire.chadia/viz/VeridiLogisticsAudit/VeridiLogisticsOperationalAuditDashboard |
 |  **Presentation (PDF/Slides)** | https://docs.google.com/presentation/d/1EiQF4E4oN6sMVNaOvciEgpKzKUA7QJ7FfxzdHw0G94M/edit?usp=sharing |
-|  **Video Walkthrough (Optional)** |  |
+|  **Video Walkthrough (Optional)** | https://www.loom.com/share/945b40a67239481a99f00f4c2b3e0c3f |
 
 ## C. Technical Explanation
 
