@@ -100,7 +100,7 @@ This insight directly informs the prioritisation of carrier SLA negotiations: fi
 veridi-logistics-audit/
 │
 ├── veridi_logistics_audit.ipynb     ← Main analysis notebook
-├── veridi_logistics_audit.html      ← HTML export (charts visible)
+├── veridi_logistics_audit.pdf       ← pdf export (charts visible)
 ├── README.md                        ← This file
 ├── presentation/
 │   └── veridi_delivery_audit.pptx  ← Slide deck
