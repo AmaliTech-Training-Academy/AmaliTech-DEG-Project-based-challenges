@@ -1,4 +1,4 @@
-# 🚚 Veridi Logistics — "Last Mile" Delivery Performance Audit
+#  Veridi Logistics — "Last Mile" Delivery Performance Audit
 
 > **Olist Brazilian E-Commerce Dataset · Google Colab · Tableau Public**
 
