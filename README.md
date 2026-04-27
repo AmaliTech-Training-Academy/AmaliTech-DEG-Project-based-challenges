@@ -14,10 +14,10 @@ Veridi Logistics has a systemic delivery accuracy problem affecting customer sat
 
 | Deliverable | Link |
 |---|---|
-|  **Notebook (Google Colab)** | [View Notebook →](https://colab.research.google.com/drive/YOUR_LINK_HERE) |
-|  **Dashboard (Tableau Public)** | [View Dashboard →](https://public.tableau.com/views/YOUR_LINK_HERE) |
-|  **Presentation (PDF/Slides)** | [View Slides →](YOUR_SLIDES_LINK_HERE) |
-|  **Video Walkthrough (Optional)** | [Watch on YouTube →](YOUR_VIDEO_LINK_HERE) |
+|  **Notebook (Google Colab)** | https://colab.research.google.com/drive/1eyohcz2Es1zg1-mPfAUhcdIFJxsS_hVv?usp=sharing |
+|  **Dashboard (Tableau Public)** | https://public.tableau.com/app/profile/ingabire.chadia/viz/VeridiLogisticsAudit/VeridiLogisticsOperationalAuditDashboard |
+|  **Presentation (PDF/Slides)** | https://docs.google.com/presentation/d/1EiQF4E4oN6sMVNaOvciEgpKzKUA7QJ7FfxzdHw0G94M/edit?usp=sharing |
+|  **Video Walkthrough (Optional)** |  |
 
 ## C. Technical Explanation
 
@@ -116,7 +116,7 @@ veridi-logistics-audit/
 └── .gitignore
 ```
 
-### `.gitignore` content (add this to your repo root):
+### `.gitignore` content :
 ```
 data/
 *.csv
@@ -132,6 +132,6 @@ __pycache__/
 
 The dataset contains 100,000 real anonymised orders from the Olist marketplace, covering October 2016 – September 2018 across all 27 Brazilian states. It is a relational database dump split across 9 CSV files connected by `order_id`, `customer_id`, `product_id`, and `seller_id` keys.
 
----
 
-*Submission prepared for: Veridi Logistics "Last Mile" Logistics Auditor project.*
+
+
