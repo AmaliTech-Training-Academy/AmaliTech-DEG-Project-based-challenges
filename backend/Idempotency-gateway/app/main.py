@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.responses import JSONResponse
 from typing import Optional
 import uuid
 import asyncio
@@ -75,8 +76,14 @@ async def process_payment(
                 }
             )
         
-        # Same key and same body - return cached response
-        return PaymentResponse(**cached_response)
+        # Same key and same body - return cached response with cache header
+        response = PaymentResponse(**cached_response)
+        # Return as JSONResponse to add custom headers
+        return JSONResponse(
+            content=response.dict(),
+            status_code=200,
+            headers={"X-Cache-Hit": "true"}
+        )
     
     # Step 5: Get lock for this key (handles concurrent requests)
     lock = await storage.get_lock(idempotency_key)
@@ -98,7 +105,12 @@ async def process_payment(
                         "idempotency_key": idempotency_key
                     }
                 )
-            return PaymentResponse(**cached_response)
+            response = PaymentResponse(**cached_response)
+            return JSONResponse(
+                content=response.dict(),
+                status_code=200,
+                headers={"X-Cache-Hit": "true"}
+            )
         
         # Step 7: Process the payment (with 2-second delay)
         result = simulate_payment_processing(payment.amount, payment.currency)
@@ -106,5 +118,10 @@ async def process_payment(
         # Step 8: Store the result with request hash
         await storage.set(idempotency_key, result, current_request_hash)
         
-        # Step 9: Return the result
-        return PaymentResponse(**result)
+        # Step 9: Return the result (this is a fresh response, not from cache)
+        response = PaymentResponse(**result)
+        return JSONResponse(
+            content=response.dict(),
+            status_code=200,
+            headers={"X-Cache-Hit": "false"}
+        )
