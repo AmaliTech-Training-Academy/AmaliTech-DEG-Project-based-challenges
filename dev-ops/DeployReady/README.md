@@ -1,21 +1,21 @@
-# DeployReady — Automated Deployment Pipeline
+# DeployReady :  Automated Deployment Pipeline
 
 A containerized Node.js API with full CI/CD automation, deployed to AWS EC2.
 
 ---
 
-## 🚀 Live Demo
+##  Live Demo
 
 **Public Endpoint:** http://54.89.125.94
 
 **Available Routes:**
-- `GET /health` — Health check endpoint
-- `GET /metrics` — System metrics (uptime, memory usage)
-- `POST /data` — Echo JSON payload
+- `GET /health` : Health check endpoint
+- `GET /metrics` : System metrics (uptime, memory usage)
+- `POST /data` : Echo JSON payload
 
 ---
 
-## 📋 Project Overview
+##  Project Overview
 
 This project demonstrates core DevOps practices:
 - **Containerization** with Docker
@@ -23,17 +23,47 @@ This project demonstrates core DevOps practices:
 - **Cloud Deployment** on AWS EC2
 - **Infrastructure as Code** principles
 
-### Architecture
+### Architecture Overview
 
-**[View Architecture Diagram](https://drive.google.com/drive/folders/13EHXQcN0PcE3zAsmF7gQcKBHsYUc-9vE)**
+**[ View Full Architecture Diagram](https://drive.google.com/drive/folders/13EHXQcN0PcE3zAsmF7gQcKBHsYUc-9vE)** 
+
+or Click here   https://drive.google.com/drive/folders/13EHXQcN0PcE3zAsmF7gQcKBHsYUc-9vE
+
+The system follows a modern CI/CD architecture:
 
 ```
-Developer Push → GitHub Actions → Build & Test → Push to GHCR → Deploy to EC2 → Live Application
+┌──────────────┐      ┌──────────────────┐      ┌─────────────────┐
+│  Developer   │─────▶│  GitHub Actions  │─────▶│      GHCR       │
+│  (git push)  │      │  (CI/CD Pipeline)│      │ (Container Reg) │
+└──────────────┘      └──────────────────┘      └─────────────────┘
+                              │                          │
+                              │ SSH Deploy               │ Pull Image
+                              ▼                          ▼
+                      ┌──────────────────────────────────────┐
+                      │       AWS EC2 (Ubuntu 26.04)         │
+                      │  ┌────────────────────────────────┐  │
+                      │  │   Docker Container             │  │
+                      │  │   (Node.js App on port 3000)   │  │
+                      │  └────────────────────────────────┘  │
+                      │         Port 80 ──▶ Port 3000        │
+                      └──────────────────────────────────────┘
+                                      │
+                                      ▼
+                              ┌───────────────┐
+                              │  End Users    │
+                              │ (HTTP Traffic)│
+                              └───────────────┘
 ```
+
+**Key Components:**
+- **GitHub Actions:** Automated CI/CD pipeline (test, build, push, deploy)
+- **GHCR:** Stores Docker images with version tags
+- **AWS EC2:** Hosts the containerized application
+- **Docker:** Ensures consistent runtime environment
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 | Component | Technology |
 |-----------|------------|
@@ -46,7 +76,61 @@ Developer Push → GitHub Actions → Build & Test → Push to GHCR → Deploy t
 
 ---
 
-## 📦 Local Development
+##  Setup Instructions
+
+### Prerequisites
+
+- Docker Desktop installed
+- Node.js 18+ (for local testing without Docker)
+- AWS Account (for cloud deployment)
+- GitHub Account
+
+### Local Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Trtheo/AmaliTech-DEG-Project-based-challenges.git
+   cd AmaliTech-DEG-Project-based-challenges/dev-ops/DeployReady
+   ```
+
+2. **Create environment file:**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Run with Docker Compose:**
+   ```bash
+   docker compose up --build
+   ```
+
+4. **Test the application:**
+   ```bash
+   curl http://localhost:3000/health
+   ```
+
+### Cloud Deployment Setup
+
+1. **Provision AWS EC2 instance** (t3.micro, Ubuntu 26.04 LTS)
+2. **Configure Security Group** (SSH port 22, HTTP port 80)
+3. **Install Docker on EC2:**
+   ```bash
+   sudo apt update
+   sudo apt install docker.io -y
+   sudo systemctl start docker
+   sudo usermod -aG docker ubuntu
+   ```
+
+4. **Configure GitHub Secrets:**
+   - `EC2_SSH_KEY`: Your .pem private key content
+   - `EC2_SERVER_IP`: Your EC2 public IP address
+
+5. **Push to main branch** — deployment happens automatically!
+
+For detailed deployment steps, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+---
+
+##  Local Development
 
 ### Prerequisites
 
@@ -79,7 +163,7 @@ npm test
 
 ---
 
-## 🔄 CI/CD Pipeline
+##  CI/CD Pipeline
 
 The deployment pipeline is fully automated via GitHub Actions (`.github/workflows/deploy.yml`).
 
@@ -106,7 +190,7 @@ The following GitHub Secrets are required:
 
 ---
 
-## ☁️ Cloud Infrastructure
+##  Cloud Infrastructure
 
 ### AWS EC2 Instance
 
@@ -132,7 +216,7 @@ The application runs in a Docker container:
 
 ---
 
-## 📖 Documentation
+##  Documentation
 
 For detailed deployment information, see [DEPLOYMENT.md](./DEPLOYMENT.md), which covers:
 - Cloud provider selection and rationale
@@ -143,7 +227,7 @@ For detailed deployment information, see [DEPLOYMENT.md](./DEPLOYMENT.md), which
 
 ---
 
-## 🔐 Security Features
+##  Security Features
 
 - Container runs as **non-root user**
 - Environment variables managed via `.env` files (not committed)
@@ -153,7 +237,7 @@ For detailed deployment information, see [DEPLOYMENT.md](./DEPLOYMENT.md), which
 
 ---
 
-## 🧪 Testing the Deployment
+##  Testing the Deployment
 
 ### Health Check
 
@@ -202,7 +286,7 @@ curl -X POST http://54.89.125.94/data \
 
 ---
 
-## 📊 Monitoring
+##  Monitoring
 
 ### Check Container Status
 
@@ -225,7 +309,7 @@ docker stats deployready
 
 ---
 
-## 🚧 Design Decisions
+##  Design Decisions
 
 ### 1. Why Docker?
 
@@ -257,7 +341,7 @@ docker stats deployready
 
 ---
 
-## 🔄 Deployment Workflow
+##  Deployment Workflow
 
 ```mermaid
 graph LR
@@ -272,7 +356,7 @@ graph LR
 
 ---
 
-## 📈 Future Improvements
+##  Future Improvements
 
 - [ ] Implement HTTPS with Let's Encrypt SSL
 - [ ] Add AWS CloudWatch monitoring and alarms
@@ -286,7 +370,7 @@ graph LR
 
 ---
 
-## 📝 Project Structure
+##  Project Structure
 
 ```
 DeployReady/
@@ -308,26 +392,26 @@ DeployReady/
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 This is a learning project for the AmaliTech DEG Program. Contributions are welcome!
 
 ---
 
-## 📄 License
+##  License
 
 This project is part of the AmaliTech DEG Project-based Challenges.
 
 ---
 
-## 👤 Author
+##  Author
 
 **Trtheo**  
 GitHub: [@Trtheo](https://github.com/Trtheo)
 
 ---
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - AmaliTech Training Academy for the project challenge
 - AWS Free Tier for hosting
