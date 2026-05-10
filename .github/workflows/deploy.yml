@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout code
+      # Checkout repository code
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -51,13 +51,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build Docker image
+      # Build Docker image with lowercase image name
       - name: Build image
-        run: docker build -t ghcr.io/${{ github.repository }}/kora-app:${{ github.sha }} .
+        run: |
+          docker build -t ghcr.io/muhireyves250/amalitech-deg-project-based-challenges/kora-app:${{ github.sha }} .
 
       # Push Docker image
       - name: Push image
-        run: docker push ghcr.io/${{ github.repository }}/kora-app:${{ github.sha }}
+        run: |
+          docker push ghcr.io/muhireyves250/amalitech-deg-project-based-challenges/kora-app:${{ github.sha }}
 
   deploy:
     name: Deploy to Server
@@ -65,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Deploy via SSH
+      # Deploy application to EC2 server
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -74,7 +76,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-            docker pull ghcr.io/${{ github.repository }}/kora-app:${{ github.sha }}
+            docker pull ghcr.io/muhireyves250/amalitech-deg-project-based-challenges/kora-app:${{ github.sha }}
             docker stop kora-app || true
             docker rm kora-app || true
-            docker run -d --name kora-app -p 80:3000 ghcr.io/${{ github.repository }}/kora-app:${{ github.sha }}
+            docker run -d --name kora-app -p 80:3000 ghcr.io/muhireyves250/amalitech-deg-project-based-challenges/kora-app:${{ github.sha }}
