@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup Node.js environment
+      # Setup Node.js
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -23,11 +23,15 @@ jobs:
 
       # Install dependencies
       - name: Install dependencies
-        run: npm install --prefix app
+        run: |
+          cd dev-ops/DeployReady/app
+          npm install
 
       # Run tests
       - name: Run tests
-        run: npm test --prefix app
+        run: |
+          cd dev-ops/DeployReady/app
+          npm test
 
   build_and_push:
     name: Build & Push Docker Image
@@ -47,7 +51,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build Docker image with commit SHA tag
+      # Build Docker image
       - name: Build image
         run: docker build -t ghcr.io/${{ github.repository }}/kora-app:${{ github.sha }} .
 
@@ -61,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # SSH into server and deploy container
+      # Deploy via SSH
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -69,6 +73,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
             docker pull ghcr.io/${{ github.repository }}/kora-app:${{ github.sha }}
             docker stop kora-app || true
             docker rm kora-app || true
