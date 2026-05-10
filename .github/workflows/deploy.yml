@@ -51,10 +51,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build Docker image with lowercase image name
+      # Build Docker image
       - name: Build image
         run: |
-          docker build -t ghcr.io/muhireyves250/amalitech-deg-project-based-challenges/kora-app:${{ github.sha }} .
+          docker build -t ghcr.io/muhireyves250/amalitech-deg-project-based-challenges/kora-app:${{ github.sha }} ./dev-ops/DeployReady
 
       # Push Docker image
       - name: Push image
