@@ -18,7 +18,7 @@ A Spring Boot REST API that guarantees every payment is processed **exactly once
 
 ## Architecture Diagram
 
-![Architecture Diagram](./docs/architecture-diagram.svg)
+<img width="1141" height="713" alt="image" src="https://github.com/user-attachments/assets/88e6218d-04b0-4c4c-a487-3d8f8827ebc6" />
 
 The diagram above shows the complete request flow from the moment a client sends a payment request to the moment a response is returned. Every incoming request passes through four stages: client request intake, key lookup, validation and processing, and finally the response.
 
