@@ -22,3 +22,7 @@ springdoc:
     path: /swagger-ui.html
     tryItOutEnabled: true
     operationsSorter: method
+
+app:
+  idempotency:
+    ttl-hours: 36

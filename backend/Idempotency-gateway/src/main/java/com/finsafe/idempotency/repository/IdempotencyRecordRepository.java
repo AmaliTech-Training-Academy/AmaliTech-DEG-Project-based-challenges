@@ -13,5 +13,5 @@ public interface IdempotencyRecordRepository extends JpaRepository<IdempotencyRe
 
     Optional<IdempotencyRecord> findByIdempotencyKey(String idempotencyKey);
 
-    List<IdempotencyRecord> findAllByCreatedAtBefore(LocalDateTime limit);
+    List<IdempotencyRecord> findAllByCreatedAtBefore(LocalDateTime timeLimit);
 }
