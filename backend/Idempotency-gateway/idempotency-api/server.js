@@ -6,21 +6,31 @@ const PORT = 3000;
 //Middleware to read JSON
 app.use(express.json());
 
-//Test route
-app.get("/", (req, res) => {
-    res.send("API is runnind");
+// Middleware: require Idempotency-Key header on all requests
+app.use((req, res, next) => {
+    const idempotencyKey = req.headers["idempotency-key"];
+    if (!idempotencyKey) {
+        return res.status(400).json({ error: "Missing required header: Idempotency-Key" });
+    }
+    next();
 });
 
-// Start server
-app.listen(PORT, ()=> {
-    console.log(`Server running on Port ${PORT}`);
+//Test route
+app.get("/", (req, res) => {
+    res.send("API is running");
 });
 
 app.post("/process-payment", (req, res) => {
-    const {amount, currency } = req.body;
+    const key = req.headers["idempotency-key"];
+    const { amount, currency } = req.body;
 
-    res.json({
-        message: `Payment of ${amount} ${currency} recieved`,
-
+    res.status(201).json({
+        message: `Payment of ${amount} ${currency} received`,
+        idempotencyKey: key,
     });
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on Port ${PORT}`);
 });
