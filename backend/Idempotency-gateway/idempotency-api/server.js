@@ -1,3 +1,4 @@
+const store = {};
 const express = require("express");
 
 const app = express();
@@ -20,14 +21,35 @@ app.get("/", (req, res) => {
     res.send("API is running");
 });
 
-app.post("/process-payment", (req, res) => {
+app.post("/process-payment", async (req, res) => {
     const key = req.headers["idempotency-key"];
-    const { amount, currency } = req.body;
+    const body = req.body;
 
-    res.status(201).json({
-        message: `Payment of ${amount} ${currency} received`,
-        idempotencyKey: key,
-    });
+    // 🔍 Check if key already exists in store
+    if (store[key]) {
+        const existing = store[key];
+
+        // ✅ Same key + same body → replay saved response
+        if (JSON.stringify(existing.body) === JSON.stringify(body)) {
+            res.set("X-Cache-Hit", "true");
+            return res.status(existing.status).json(existing.response);
+        }
+
+        // ❌ Same key, different body → conflict
+        return res.status(409).json({
+            error: "Idempotency key already used with different request data",
+        });
+    }
+
+    // 🟢 First-time request → simulate processing delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const response = { message: `Charged ${body.amount} ${body.currency}` };
+
+    // 💾 Save to store
+    store[key] = { body, response, status: 200 };
+
+    return res.status(200).json(response);
 });
 
 // Start server
