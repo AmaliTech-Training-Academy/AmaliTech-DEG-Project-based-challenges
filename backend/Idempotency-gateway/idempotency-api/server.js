@@ -25,31 +25,44 @@ app.post("/process-payment", async (req, res) => {
     const key = req.headers["idempotency-key"];
     const body = req.body;
 
-    // 🔍 Check if key already exists in store
+    // 🔍 If key exists
     if (store[key]) {
         const existing = store[key];
 
-        // ✅ Same key + same body → replay saved response
-        if (JSON.stringify(existing.body) === JSON.stringify(body)) {
-            res.set("X-Cache-Hit", "true");
-            return res.status(existing.status).json(existing.response);
+        // ⏳ Still processing
+        if (existing.status === "processing") {
+            return res.status(429).json({
+                error: "Request is already being processed. Try again shortly.",
+            });
         }
 
-        // ❌ Same key, different body → conflict
+        // ✅ Completed — same body → replay
+        if (JSON.stringify(existing.body) === JSON.stringify(body)) {
+            res.set("X-Cache-Hit", "true");
+            return res.status(existing.statusCode).json(existing.response);
+        }
+
+        // ❌ Completed — different body → conflict
         return res.status(409).json({
             error: "Idempotency key already used with different request data",
         });
     }
 
-    // 🟢 First-time request → simulate processing delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // 🟢 Mark as processing
+    store[key] = { status: "processing" };
 
-    const response = { message: `Charged ${body.amount} ${body.currency}` };
+    try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // 💾 Save to store
-    store[key] = { body, response, status: 200 };
+        const response = { message: `Charged ${body.amount} ${body.currency}` };
 
-    return res.status(200).json(response);
+        store[key] = { status: "completed", body, response, statusCode: 200 };
+
+        return res.status(200).json(response);
+    } catch (error) {
+        delete store[key];
+        return res.status(500).json({ error: "Something went wrong" });
+    }
 });
 
 // Start server
