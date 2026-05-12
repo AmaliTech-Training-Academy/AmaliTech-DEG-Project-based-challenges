@@ -22,8 +22,11 @@ app.get("/", (req, res) => {
 });
 
 app.post("/process-payment", async (req, res) => {
-    const key = req.headers["idempotency-key"];
+    const key = req.headers["idempotency-key"]?.trim().toLowerCase();
     const body = req.body;
+
+    console.log("Idempotency key:", key);
+    console.log("Store BEFORE:", store);
 
     // 🔍 If key exists
     if (store[key]) {
@@ -36,29 +39,33 @@ app.post("/process-payment", async (req, res) => {
             });
         }
 
-        // ✅ Completed — same body → replay
-        if (JSON.stringify(existing.body) === JSON.stringify(body)) {
-            res.set("X-Cache-Hit", "true");
-            return res.status(existing.statusCode).json(existing.response);
+        // ✅ Completed — same body → replay, different body → conflict
+        if (existing.status === "completed") {
+            if (JSON.stringify(existing.body) === JSON.stringify(body)) {
+                console.log("Returning cached response ✅");
+                res.setHeader("X-Cache-Hit", "true");
+                return res.status(existing.statusCode || 201).json(existing.response);
+            } else {
+                return res.status(409).json({
+                    error: "Idempotency key already used with different request data",
+                });
+            }
         }
-
-        // ❌ Completed — different body → conflict
-        return res.status(409).json({
-            error: "Idempotency key already used with different request data",
-        });
     }
 
     // 🟢 Mark as processing
     store[key] = { status: "processing" };
 
     try {
+        console.log("Processing NEW payment 💰");
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         const response = { message: `Charged ${body.amount} ${body.currency}` };
 
         store[key] = { status: "completed", body, response, statusCode: 200 };
+        console.log("Store AFTER:", store);
 
-        return res.status(200).json(response);
+        return res.status(201).json(response);
     } catch (error) {
         delete store[key];
         return res.status(500).json({ error: "Something went wrong" });
