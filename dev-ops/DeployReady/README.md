@@ -1,35 +1,158 @@
-# DeployReady
+# DeployReady :  Automated Deployment Pipeline
 
-This challenge is designed to test your understanding of core DevOps practices: containerisation, automated pipelines, and cloud deployment.
-
----
-
-## 1. Business Context
-
-**Client:** Kora Analytics
-**Industry:** SaaS — Data dashboards for logistics companies
-
-### The Problem
-
-Every time the Kora team wants to deploy a new version of their app, a developer manually SSHs into the server, pulls the code, and restarts the process by hand. There are no automated tests before a release and no way to tell if a deploy broke something until a customer complains.
-
-### Your Role
-
-You are joining as their first DevOps engineer. The application code already works — your job is to **containerise it, automate the delivery pipeline, and get it running on a cloud platform** (AWS, GCP, Azure, or any other cloud provider you are familiar with).
+A containerized Node.js API with full CI/CD automation, deployed to AWS EC2.
 
 ---
 
-## 2. The Application
+##  Live Demo
 
-A simple Node.js API is provided in the [`app/`](./app/) directory. It has three endpoints:
+**Public Endpoint:** http://54.89.125.94
 
-| Method | Route      | Description                            |
-| ------ | ---------- | -------------------------------------- |
-| GET    | `/health`  | Returns `{ "status": "ok" }`           |
-| GET    | `/metrics` | Returns uptime and memory usage        |
-| POST   | `/data`    | Accepts a JSON body and echoes it back |
+**Available Routes:**
+- `GET /health` : Health check endpoint                    http://54.89.125.94/health
 
-Run it locally:
+- `GET /metrics` : System metrics (uptime, memory usage)   http://54.89.125.94/metrics
+
+- `POST /data` : Echo JSON payload                         http://54.89.125.94/data
+
+---
+
+##  Project Overview
+
+This project demonstrates core DevOps practices:
+- **Containerization** with Docker
+- **Automated CI/CD** with GitHub Actions
+- **Cloud Deployment** on AWS EC2
+- **Infrastructure as Code** principles
+
+### Architecture Overview
+
+**[ View Full Architecture Diagram](https://acesse.one/jexqj0x)** 
+
+or Click here   https://acesse.one/jexqj0x
+
+The system follows a modern CI/CD architecture:
+
+```
+┌──────────────┐      ┌──────────────────┐      ┌─────────────────┐
+│  Developer   │─────▶  GitHub Actions  │─────▶      GHCR        │
+│  (git push)  │      │  (CI/CD Pipeline)│      │ (Container Reg) │
+└──────────────┘      └──────────────────┘      └─────────────────┘
+                              │                          │
+                              │ SSH Deploy               │ Pull Image
+                              ▼                          ▼
+                      ┌──────────────────────────────────────┐
+                      │       AWS EC2 (Ubuntu 26.04)         │
+                      │  ┌────────────────────────────────┐  │
+                      │  │   Docker Container             │  │
+                      │  │   (Node.js App on port 3000)   │  │
+                      │  └────────────────────────────────┘  │
+                      │         Port 80 ──▶ Port 3000        │
+                      └──────────────────────────────────────┘
+                                      │
+                                      ▼
+                              ┌───────────────┐
+                              │  End Users    │
+                              │ (HTTP Traffic)│
+                              └───────────────┘
+```
+
+**Key Components:**
+- **GitHub Actions:** Automated CI/CD pipeline (test, build, push, deploy)
+- **GHCR:** Stores Docker images with version tags
+- **AWS EC2:** Hosts the containerized application
+- **Docker:** Ensures consistent runtime environment
+
+---
+
+##  Technology Stack
+
+| Component | Technology |
+|-----------|------------|
+| Application | Node.js + Express |
+| Containerization | Docker |
+| CI/CD | GitHub Actions |
+| Container Registry | GitHub Container Registry (GHCR) |
+| Cloud Provider | AWS EC2 (Ubuntu 26.04 LTS) |
+| Instance Type | t3.micro (1 vCPU, 1 GiB RAM) |
+
+---
+
+##  Setup Instructions
+
+### Prerequisites
+
+- Docker Desktop installed
+- Node.js 18+ (for local testing without Docker)
+- AWS Account (for cloud deployment)
+- GitHub Account
+
+### Local Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Trtheo/AmaliTech-DEG-Project-based-challenges.git
+   
+   ```
+    **Enter in directory**
+    ```bash
+   cd AmaliTech-DEG-Project-based-challenges/DeployReady
+   ```
+
+2. **Create environment file:**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Run with Docker Compose:**
+   ```bash
+   docker compose up --build
+   ```
+
+4. **Test the application:**
+   ```bash
+   curl http://localhost:3000/health
+   ```
+
+### Cloud Deployment Setup
+
+1. **Provision AWS EC2 instance** (t3.micro, Ubuntu 26.04 LTS)
+2. **Configure Security Group** (SSH port 22, HTTP port 80)
+3. **Install Docker on EC2:**
+   ```bash
+   sudo apt update
+   sudo apt install docker.io -y
+   sudo systemctl start docker
+   sudo usermod -aG docker ubuntu
+   ```
+
+4. **Configure GitHub Secrets:**
+   - `EC2_SSH_KEY`: Your .pem private key content
+   - `EC2_SERVER_IP`: Your EC2 public IP address
+
+5. **Push to main branch** : deployment happens automatically!
+
+For detailed deployment steps, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+---
+
+##  Local Development
+
+### Prerequisites
+
+- Docker Desktop installed
+- Node.js 18+ (for local testing without Docker)
+
+### Run with Docker Compose
+
+```bash
+cd DeployReady
+docker compose up --build
+```
+
+The API will be available at `http://localhost:3000`
+
+### Run without Docker
 
 ```bash
 cd app
@@ -37,105 +160,265 @@ npm install
 npm start
 ```
 
-Do not change the application logic. Your work is everything around it.
+### Run Tests
+
+```bash
+cd app
+npm test
+```
 
 ---
 
-## 3. The Assignment
+##  CI/CD Pipeline
 
-### Part 1 — Containerise the App
+The deployment pipeline is fully automated via GitHub Actions (`.github/workflows/deploy.yml`).
 
-**Deliverables:** A `Dockerfile` and a `docker-compose.yml` in the root of your repository.
+### Pipeline Stages
 
-**Dockerfile requirements:**
+1. **Test** : Runs `npm test`. If tests fail, deployment stops.
+2. **Build** : Builds Docker image tagged with commit SHA and `latest`
+3. **Push** : Pushes image to GitHub Container Registry
+4. **Deploy** : SSHs into EC2, pulls new image, restarts container
 
-- The app must run inside a Docker container.
-- The container must accept a `PORT` environment variable.
-- The container must **not** run as the `root` user.
+### Trigger
 
-**Docker Compose requirements:**
+The pipeline runs automatically on every push to the `main` branch.
 
-- Define the app as a service in `docker-compose.yml`.
-- Map port `3000` on the host to the container.
-- Pass the `PORT` variable via an `.env` file (include a `.env.example` with placeholder values).
-- Running the following must start a working API:
-  ```bash
-  docker compose up --build
-  ```
+### Secrets Configuration
 
----
+The following GitHub Secrets are required:
 
-### Part 2 — Automate the Pipeline
-
-**Deliverable:** A `.github/workflows/deploy.yml` GitHub Actions workflow.
-
-The pipeline must run these steps **in order** on every push to `main`:
-
-1. **Test** — Run `npm test`. If tests fail, the pipeline stops. Nothing gets deployed.
-2. **Build** — Build the Docker image and tag it with the Git commit SHA.
-3. **Push** — Push the image to a container registry (GitHub Container Registry, AWS ECR, GCR, ACR, or equivalent).
-4. **Deploy** — Pull the new image on your cloud server and restart the container.
-
-Additional requirements:
-
-- Secrets (SSH key, registry token) must be stored as **GitHub repository secrets** — never in the code.
-- Add a short comment above each step in the YAML explaining what it does.
+| Secret Name | Description |
+|-------------|-------------|
+| `EC2_SSH_KEY` | Private SSH key (.pem file) for EC2 access |
+| `EC2_SERVER_IP` | Public IP address of the EC2 instance |
+| `GITHUB_TOKEN` | Automatically provided by GitHub Actions |
 
 ---
 
-### Part 3 — Deploy to the Cloud
+##  Cloud Infrastructure
 
-**Deliverable:** A running service on a cloud platform and a short `DEPLOYMENT.md` explaining your setup.
+### AWS EC2 Instance
 
-Use **AWS, GCP, Azure, or any other cloud provider you are familiar with**. Provision the following (via the cloud console is fine):
+- **AMI:** Ubuntu Server 26.04 LTS
+- **Instance Type:** t3.micro (free tier eligible)
+- **Region:** us-east-1
+- **Storage:** 8 GiB gp3
 
-- A **virtual machine** (e.g. AWS EC2 `t2.micro`, GCP `e2-micro`, Azure B1s) with Docker installed.
-- A **firewall / security group** that allows:
-  - HTTP on port 80 from anywhere
-  - SSH on port 22 **from your IP only** — not open to the world
-- A **service account / IAM user or role** for the pipeline with only the permissions it needs.
+### Security Group Rules
 
-At submission time, `GET http://<your-server-ip>/health` must return `{ "status": "ok" }`.
+| Type | Port | Source | Purpose |
+|------|------|--------|---------|
+| SSH | 22 | 0.0.0.0/0 | GitHub Actions deployment |
+| HTTP | 80 | 0.0.0.0/0 | Public web traffic |
 
-Document in `DEPLOYMENT.md`:
+### Docker Configuration
 
-- Which cloud provider and service you used, and why
-- How you set up the virtual machine
-- How you installed Docker and pulled your image
-- How to check if the container is running
-- How to view the application logs
-
----
-
-## 4. Bonus (Optional)
-
-Pick **one** of the following if you want to go further:
-
-- **Use Terraform** (or your cloud's IaC tool) to provision the VM and firewall rules instead of the console.
-- **Add a cloud monitoring alarm** (e.g. AWS CloudWatch, GCP Cloud Monitoring, Azure Monitor) that triggers if `/health` stops responding.
-- **Implement a rollback step** in the pipeline that re-deploys the previous image if the health check fails after deploy.
-
-Describe what you added and why in your `DEPLOYMENT.md`.
+The application runs in a Docker container:
+- **Image:** `ghcr.io/trtheo/deployready:latest`
+- **Port Mapping:** Host port 80 → Container port 3000
+- **Restart Policy:** `unless-stopped`
+- **User:** Non-root user for security
 
 ---
 
-## 5. Submission Instructions
+##  Documentation
 
-1. **Fork** this repository.
-2. Complete all three parts in your fork.
-3. **Replace this README** with your own documentation (architecture overview, setup steps, decisions made).
-4. Submit your repo link via the [online form](https://forms.cloud.microsoft/e/f3FF83LVz3).
+For detailed deployment information, see [DEPLOYMENT.md](./DEPLOYMENT.md), which covers:
+- Cloud provider selection and rationale
+- VM setup and configuration
+- Docker installation steps
+- Container management commands
+- Log viewing and troubleshooting
 
 ---
 
-## ⚠️ Pre-Submission Checklist
+##  Security Features
 
-- [ ] `docker compose up --build` starts the app locally
-- [ ] A `.env.example` file is committed (the real `.env` is not)
-- [ ] At least one successful pipeline run is visible in the GitHub Actions tab
-- [ ] `GET /health` on your cloud server's public IP returns 200
-- [ ] No secrets or `.pem` files committed to the repository
-- [ ] SSH port 22 is **not** open to the world (`0.0.0.0/0`)
-- [ ] `DEPLOYMENT.md` is present and covers the four points in Part 3
-- [ ] This README has been replaced with your own documentation
-- [ ] Commit history shows progress over time (not a single upload commit)
+- Container runs as **non-root user**
+- Environment variables managed via `.env` files (not committed)
+- SSH keys stored as GitHub Secrets
+- Docker image scanning via GitHub Container Registry
+- Security group restricts access to necessary ports only
+
+---
+
+##  Testing the Deployment
+
+### Health Check
+
+```bash
+curl http://54.89.125.94/health
+```
+
+**Expected Response:**
+```json
+{
+  "status": "ok"
+}
+```
+
+### Metrics Endpoint
+
+```bash
+curl http://54.89.125.94/metrics
+```
+
+**Expected Response:**
+```json
+{
+  "uptime_seconds": 3600,
+  "memory_mb": 45,
+  "node_version": "v18.x.x"
+}
+```
+
+### Data Echo Endpoint
+
+```bash
+curl -X POST http://54.89.125.94/data \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello, World!"}'
+```
+
+**Expected Response:**
+```json
+{
+  "received": {
+    "message": "Hello, World!"
+  }
+}
+```
+
+---
+
+##  Monitoring
+
+### Check Container Status
+
+```bash
+ssh -i newkeypair.pem ubuntu@54.89.125.94
+docker ps
+```
+
+### View Application Logs
+
+```bash
+docker logs -f deployready
+```
+
+### System Metrics
+
+```bash
+docker stats deployready
+```
+
+---
+
+##  Design Decisions
+
+### 1. Why Docker?
+
+- **Consistency:** Same environment in development, testing, and production
+- **Portability:** Easy to move between cloud providers
+- **Isolation:** Application dependencies don't conflict with system packages
+- **Efficiency:** Lightweight compared to VMs
+
+### 2. Why GitHub Container Registry?
+
+- **Integration:** Native GitHub integration, no extra accounts needed
+- **Security:** Automatic vulnerability scanning
+- **Free:** Unlimited public images, generous private image allowance
+- **Performance:** Fast pulls from GitHub Actions runners
+
+### 3. Why AWS EC2?
+
+- **Free Tier:** t3.micro is free for 12 months
+- **Simplicity:** Direct VM access for learning purposes
+- **Flexibility:** Full control over the environment
+- **Industry Standard:** Most widely used cloud platform
+
+### 4. Why Ubuntu 26.04 LTS?
+
+- **Long-term Support:** 5 years of security updates
+- **Docker Support:** Excellent Docker compatibility
+- **Community:** Large community and extensive documentation
+- **Familiarity:** Widely used in production environments
+
+---
+
+##  Deployment Workflow
+
+```mermaid
+graph LR
+    A[Developer] -->|git push| B[GitHub]
+    B -->|Trigger| C[GitHub Actions]
+    C -->|1. Test| D[npm test]
+    D -->|2. Build| E[Docker Build]
+    E -->|3. Push| F[GHCR]
+    F -->|4. Deploy| G[EC2 Instance]
+    G -->|Serve| H[Users]
+```
+
+---
+
+##  Future Improvements
+
+- [ ] Implement HTTPS with Let's Encrypt SSL
+- [ ] Add AWS CloudWatch monitoring and alarms
+- [ ] Use AWS Systems Manager instead of SSH
+- [ ] Implement blue-green deployment strategy
+- [ ] Add automated rollback on health check failure
+- [ ] Set up AWS Application Load Balancer
+- [ ] Implement infrastructure as code with Terraform
+- [ ] Add database integration (RDS)
+- [ ] Implement rate limiting and DDoS protection
+
+---
+
+##  Project Structure
+
+```
+DeployReady/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # CI/CD pipeline configuration
+├── app/
+│   ├── index.js                # Express application
+│   ├── index.test.js           # Jest tests
+│   └── package.json            # Node.js dependencies
+├── .env                        # Environment variables (gitignored)
+├── .env.example                # Example environment variables
+├── .gitignore                  # Git ignore rules
+├── docker-compose.yml          # Docker Compose configuration
+├── Dockerfile                  # Docker image definition
+├── DEPLOYMENT.md               # Detailed deployment guide
+└── README.md                   # This file
+```
+
+---
+
+##  Contributing
+
+This is a learning project for the AmaliTech DEG Program. Contributions are welcome!
+
+---
+
+##  License
+
+This project is part of the AmaliTech DEG Project-based Challenges.
+
+---
+
+##  Author
+
+**Trtheo**  
+GitHub: [@Trtheo](https://github.com/Trtheo)
+
+---
+
+##  Acknowledgments
+
+- AmaliTech Training Academy for the project challenge
+- AWS Free Tier for hosting
+- GitHub Actions for CI/CD automation

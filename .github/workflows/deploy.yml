@@ -1,0 +1,66 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Node.js environment for running tests
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # Install dependencies and run tests - pipeline stops if tests fail
+      - name: Run tests
+        working-directory: ./dev-ops/DeployReady/app
+        run: |
+          npm install
+          npm test
+
+      # Log in to GitHub Container Registry to push Docker images
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build Docker image and tag it with the commit SHA for versioning
+      - name: Build Docker image
+        working-directory: ./dev-ops/DeployReady
+        run: |
+          docker build -t ghcr.io/trtheo/deployready:${{ github.sha }} .
+          docker tag ghcr.io/trtheo/deployready:${{ github.sha }} ghcr.io/trtheo/deployready:latest
+
+      # Push the Docker image to GitHub Container Registry
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/trtheo/deployready:${{ github.sha }}
+          docker push ghcr.io/trtheo/deployready:latest
+
+      # SSH into EC2 server, pull the new image, and restart the container
+      - name: Deploy to EC2
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          SERVER_IP: ${{ secrets.EC2_SERVER_IP }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@$SERVER_IP << 'EOF'
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+            docker pull ghcr.io/trtheo/deployready:latest
+            docker stop deployready || true
+            docker rm deployready || true
+            docker run -d --name deployready -p 80:3000 -e PORT=3000 --restart unless-stopped ghcr.io/trtheo/deployready:latest
+          EOF
+          rm -f private_key.pem
