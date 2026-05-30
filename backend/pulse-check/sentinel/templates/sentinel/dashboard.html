@@ -1,0 +1,488 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watchdog Sentinel — CritMon Servers</title>
+    <!-- Favicon link (optional) -->
+    <link rel="stylesheet" href="{% static 'sentinel/style.css' %}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="brand-section">
+                <h1>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    CRITMON Sentinel
+                </h1>
+                <p>Dead Man's Switch API & Infrastructure Watchdog Panel</p>
+            </div>
+            
+            <div class="sentinel-badge {% if not redis_connected %}disconnected{% endif %}">
+                <span class="status-dot"></span>
+                <span>SENTINEL: {% if redis_connected %}REDIS CORE ACTIVE{% else %}DB-ONLY DEGRADED{% endif %}</span>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <section class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-info">
+                    <div class="stat-label">Total Monitors</div>
+                    <div class="stat-val" id="stat-total">{{ total_count }}</div>
+                </div>
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                </div>
+            </div>
+            
+            <div class="stat-card active">
+                <div class="stat-info">
+                    <div class="stat-label">Active sentinel</div>
+                    <div class="stat-val" id="stat-active" style="color: var(--success);">{{ active_count }}</div>
+                </div>
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+            </div>
+            
+            <div class="stat-card paused">
+                <div class="stat-info">
+                    <div class="stat-label">Snoozed / Paused</div>
+                    <div class="stat-val" id="stat-paused" style="color: var(--warning);">{{ paused_count }}</div>
+                </div>
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
+                </div>
+            </div>
+            
+            <div class="stat-card down">
+                <div class="stat-info">
+                    <div class="stat-label">Offline Alerts</div>
+                    <div class="stat-val" id="stat-down" style="color: var(--danger);">{{ down_count }}</div>
+                </div>
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Split Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- LEFT PANEL: WATCHDOGS -->
+            <div class="left-column">
+                
+                <!-- Quick Register Box -->
+                <div class="quick-register-panel">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Quick Register Watchdog Monitor
+                    </h3>
+                    <form id="register-form" class="register-form-grid">
+                        <div class="form-group">
+                            <label for="device_id">Monitor ID</label>
+                            <input type="text" id="device_id" class="form-input" placeholder="e.g. solar-farm-01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="alert_email">Alert Contact Email</label>
+                            <input type="email" id="alert_email" class="form-input" placeholder="e.g. support@critmon.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="timeout">Timeout (sec)</label>
+                            <input type="number" id="timeout" class="form-input" value="60" min="5" max="3600" required>
+                        </div>
+                        <button type="submit" class="btn btn-submit">
+                            Register
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Monitors List Panel -->
+                <div class="section-panel">
+                    <div class="panel-header">
+                        <h2>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                            Tracked Devices Watchdogs
+                        </h2>
+                    </div>
+
+                    <div class="monitors-grid" id="monitors-list">
+                        {% for monitor in monitors %}
+                            <div class="monitor-card status-{{ monitor.status }}" 
+                                 id="card-{{ monitor.id }}" 
+                                 data-id="{{ monitor.id }}"
+                                 data-status="{{ monitor.status }}"
+                                 data-next-alert="{{ monitor.next_alert_at|date:'c' }}"
+                                 data-timeout="{{ monitor.timeout }}">
+                                
+                                <div class="monitor-header">
+                                    <div class="monitor-info-core">
+                                        <h3>{{ monitor.id }}</h3>
+                                        <div class="device-email">{{ monitor.alert_email }}</div>
+                                    </div>
+                                    <span class="status-pill {{ monitor.status }}" id="badge-{{ monitor.id }}">
+                                        {{ monitor.status }}
+                                    </span>
+                                </div>
+
+                                <div class="monitor-timer-box">
+                                    <div class="timer-label">Time Remaining</div>
+                                    <div class="timer-countdown" id="timer-{{ monitor.id }}">--</div>
+                                </div>
+
+                                <div class="monitor-meta">
+                                    <div>Timeout Interval: <strong>{{ monitor.timeout }}s</strong></div>
+                                    <div>Last Ping: <strong id="ping-time-{{ monitor.id }}">{{ monitor.last_heartbeat|date:"Y-m-d H:i:s" }} UTC</strong></div>
+                                </div>
+
+                                <div class="monitor-actions">
+                                    <button class="btn btn-ping" onclick="sendHeartbeat('{{ monitor.id }}')" id="btn-ping-{{ monitor.id }}" {% if monitor.status == 'down' %}style="display:none;"{% endif %}>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                                        Ping Heartbeat
+                                    </button>
+                                    
+                                    <button class="btn btn-pause" onclick="pauseMonitor('{{ monitor.id }}')" id="btn-pause-{{ monitor.id }}" {% if monitor.status != 'active' %}style="display:none;"{% endif %}>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                        Snooze
+                                    </button>
+                                    
+                                    <button class="btn btn-resume" onclick="sendHeartbeat('{{ monitor.id }}')" id="btn-resume-{{ monitor.id }}" {% if monitor.status == 'active' %}style="display:none;"{% endif %}>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                        Unpause Watchdog
+                                    </button>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="no-monitors" id="no-monitors-placeholder">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-dark);"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                <p>No monitors registered yet.</p>
+                                <p style="font-size: 0.8rem; color: var(--text-dark);">Use the quick-registration panel above or POST to /monitors API.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: ALERTS LOG -->
+            <div class="right-column">
+                <div class="section-panel" style="height: 100%;">
+                    <div class="panel-header">
+                        <h2>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--danger);"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            Live Alert Feed
+                        </h2>
+                    </div>
+
+                    <div class="alert-feed" id="alert-feed-container">
+                        {% for log in alert_logs %}
+                            <div class="alert-item">
+                                <div class="alert-item-header">
+                                    <span class="alert-badge">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                        Device Offline
+                                    </span>
+                                    <span class="alert-time">{{ log.alert_time|date:"H:i:s" }} UTC</span>
+                                </div>
+                                <div class="alert-message">{{ log.message }}</div>
+                            </div>
+                        {% empty %}
+                            <div class="no-alerts" id="no-alerts-placeholder">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success); margin-bottom: 0.5rem;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                <p>All monitored nodes operational.</p>
+                                <p style="font-size: 0.75rem; color: var(--text-dark); margin-top: 0.1rem;">Watchdog Sentinel active and scanning.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-holder"></div>
+
+    <!-- JavaScript Countdown Engine & Triggers -->
+    <script>
+        // Custom Toast Notification System
+        function showToast(message, type = 'success') {
+            const holder = document.getElementById('toast-holder');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+            if (type === 'error') {
+                icon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+            } else if (type === 'warning') {
+                icon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>`;
+            }
+            
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            holder.appendChild(toast);
+            
+            // Remove after 4 seconds
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 4000);
+        }
+
+        // JavaScript Live Countdowns
+        function updateCountdowns() {
+            const cards = document.querySelectorAll('.monitor-card');
+            
+            cards.forEach(card => {
+                const id = card.dataset.id;
+                const status = card.dataset.status;
+                const timerEl = document.getElementById(`timer-${id}`);
+                
+                if (status === 'paused') {
+                    timerEl.textContent = 'PAUSED';
+                    return;
+                }
+                
+                if (status === 'down') {
+                    timerEl.textContent = 'OFFLINE';
+                    return;
+                }
+                
+                const nextAlertStr = card.dataset.nextAlert;
+                if (!nextAlertStr) {
+                    timerEl.textContent = '--';
+                    return;
+                }
+                
+                const nextAlert = new Date(nextAlertStr);
+                const now = new Date();
+                const diffMs = nextAlert - now;
+                const diffSec = Math.max(0, Math.ceil(diffMs / 1000));
+                
+                timerEl.textContent = `${diffSec}s`;
+                
+                // Visual alert state transitions on the client
+                if (diffSec <= 10 && diffSec > 0) {
+                    timerEl.style.color = 'var(--danger)';
+                    timerEl.style.fontWeight = '800';
+                } else if (status === 'active') {
+                    timerEl.style.color = 'var(--text-main)';
+                    timerEl.style.fontWeight = '700';
+                }
+                
+                // If countdown hit zero but status is active, trigger an automatic check/reload alert
+                if (diffSec === 0 && status === 'active') {
+                    card.dataset.status = 'down';
+                    card.className = 'monitor-card status-down';
+                    document.getElementById(`badge-${id}`).className = 'status-pill down';
+                    document.getElementById(`badge-${id}`).textContent = 'down';
+                    timerEl.textContent = 'OFFLINE';
+                    timerEl.style.color = 'var(--danger)';
+                    
+                    // Hide actions
+                    document.getElementById(`btn-ping-${id}`).style.display = 'none';
+                    document.getElementById(`btn-pause-${id}`).style.display = 'none';
+                    document.getElementById(`btn-resume-${id}`).style.display = 'inline-flex';
+                    
+                    // Update stats
+                    const activeVal = parseInt(document.getElementById('stat-active').textContent);
+                    const downVal = parseInt(document.getElementById('stat-down').textContent);
+                    document.getElementById('stat-active').textContent = Math.max(0, activeVal - 1);
+                    document.getElementById('stat-down').textContent = downVal + 1;
+                    
+                    // Play toast
+                    showToast(`Device '${id}' failed to heartbeat and went OFFLINE!`, 'error');
+                    
+                    // Add dynamically to alert feed
+                    addAlertToFeed(id, `Device ${id} went offline! (Reason: Live Expiration)`);
+                }
+            });
+        }
+
+        // Live Feed Injector
+        function addAlertToFeed(monitorId, message) {
+            const feed = document.getElementById('alert-feed-container');
+            const placeholder = document.getElementById('no-alerts-placeholder');
+            if (placeholder) placeholder.remove();
+            
+            const alertItem = document.createElement('div');
+            alertItem.className = 'alert-item';
+            
+            const now = new Date();
+            const timeStr = now.toISOString().substring(11, 19);
+            
+            alertItem.innerHTML = `
+                <div class="alert-item-header">
+                    <span class="alert-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Device Offline
+                    </span>
+                    <span class="alert-time">${timeStr} UTC</span>
+                </div>
+                <div class="alert-message">${message}</div>
+            `;
+            feed.insertBefore(alertItem, feed.firstChild);
+        }
+
+        // Action: Heartbeat (Reset or Unpause)
+        function sendHeartbeat(id) {
+            fetch(`/monitors/${id}/heartbeat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(res => {
+                if (res.status === 404) {
+                    throw new Error('Device monitor not found.');
+                }
+                return res.json();
+            })
+            .then(data => {
+                const card = document.getElementById(`card-${id}`);
+                const oldStatus = card.dataset.status;
+                
+                // Update card state
+                card.dataset.status = 'active';
+                card.dataset.nextAlert = data.monitor.next_alert_at;
+                card.className = 'monitor-card status-active';
+                
+                // Update elements
+                document.getElementById(`badge-${id}`).className = 'status-pill active';
+                document.getElementById(`badge-${id}`).textContent = 'active';
+                document.getElementById(`ping-time-${id}`).textContent = formatTime(new Date(data.monitor.last_heartbeat));
+                
+                // Toggle action buttons
+                document.getElementById(`btn-ping-${id}`).style.display = 'inline-flex';
+                document.getElementById(`btn-pause-${id}`).style.display = 'inline-flex';
+                document.getElementById(`btn-resume-${id}`).style.display = 'none';
+                
+                // Update global stats
+                recalculateStats(oldStatus, 'active');
+                
+                showToast(`Heartbeat reset for '${id}'. Sentinel tracking active!`, 'success');
+            })
+            .catch(err => {
+                showToast(err.message, 'error');
+            });
+        }
+
+        // Action: Pause / Snooze
+        function pauseMonitor(id) {
+            fetch(`/monitors/${id}/pause`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(res => {
+                if (res.status === 404) {
+                    throw new Error('Device monitor not found.');
+                }
+                return res.json();
+            })
+            .then(data => {
+                const card = document.getElementById(`card-${id}`);
+                const oldStatus = card.dataset.status;
+                
+                // Update card state
+                card.dataset.status = 'paused';
+                card.className = 'monitor-card status-paused';
+                
+                // Update elements
+                document.getElementById(`badge-${id}`).className = 'status-pill paused';
+                document.getElementById(`badge-${id}`).textContent = 'paused';
+                document.getElementById(`timer-${id}`).textContent = 'PAUSED';
+                
+                // Toggle buttons
+                document.getElementById(`btn-ping-${id}`).style.display = 'inline-flex';
+                document.getElementById(`btn-pause-${id}`).style.display = 'none';
+                document.getElementById(`btn-resume-${id}`).style.display = 'inline-flex';
+                
+                // Update stats
+                recalculateStats(oldStatus, 'paused');
+                
+                showToast(`Sentinel paused for '${id}'. Alarms snoozed.`, 'warning');
+            })
+            .catch(err => {
+                showToast(err.message, 'error');
+            });
+        }
+
+        // AJAX Quick Registration Form handler
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('device_id').value.trim();
+            const alert_email = document.getElementById('alert_email').value.trim();
+            const timeout = document.getElementById('timeout').value;
+            
+            fetch('/monitors', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id, alert_email, timeout })
+            })
+            .then(res => res.json().then(data => ({ status: res.status, data })))
+            .then(resObj => {
+                if (resObj.status !== 201 && resObj.status !== 200) {
+                    throw new Error(resObj.data.error || 'Failed to register monitor.');
+                }
+                
+                const { data, status } = resObj;
+                showToast(data.message, 'success');
+                
+                // Clear inputs
+                document.getElementById('device_id').value = '';
+                
+                // Instant hot-reload or simple page reload to render card beautifully
+                // Re-rendering a complex dynamic card perfectly via pure JS is fine,
+                // but a simple quick reload makes sure all server-side templates render beautifully.
+                // We'll reload after 800ms so the user sees the toast success first!
+                setTimeout(() => {
+                    window.location.reload();
+                }, 800);
+            })
+            .catch(err => {
+                showToast(err.message, 'error');
+            });
+        });
+
+        // Time Formatter
+        function formatTime(date) {
+            const y = date.getUTCFullYear();
+            const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const d = String(date.getUTCDate()).padStart(2, '0');
+            const hh = String(date.getUTCHours()).padStart(2, '0');
+            const mm = String(date.getUTCMinutes()).padStart(2, '0');
+            const ss = String(date.getUTCSeconds()).padStart(2, '0');
+            return `${y}-${m}-${d} ${hh}:${mm}:${ss} UTC`;
+        }
+
+        // Recalculate Stats in client-side dynamically
+        function recalculateStats(oldStatus, newStatus) {
+            if (oldStatus === newStatus) return;
+            
+            const oldEl = document.getElementById(`stat-${oldStatus}`);
+            const newEl = document.getElementById(`stat-${newStatus}`);
+            
+            if (oldEl) {
+                const oldVal = parseInt(oldEl.textContent);
+                oldEl.textContent = Math.max(0, oldVal - 1);
+            }
+            if (newEl) {
+                const newVal = parseInt(newEl.textContent);
+                newEl.textContent = newVal + 1;
+            }
+        }
+
+        // Start Intervals
+        setInterval(updateCountdowns, 1000);
+        updateCountdowns(); // Run once immediately
+    </script>
+</body>
+</html>
