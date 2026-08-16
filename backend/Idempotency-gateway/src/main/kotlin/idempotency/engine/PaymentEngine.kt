@@ -13,6 +13,10 @@ class PaymentEngine(private val store: IdempotencyStore) {
     private val inFlight = ConcurrentHashMap<String, CountDownLatch>()
     private val inFlightResult = ConcurrentHashMap<String, AtomicReference<PaymentResult>>()
 
+    fun isCached(key: String): Boolean {
+        return store.get(key) != null
+    }
+
     fun processPayment(body: PaymentRequest, idempotencyKey: String): PaymentResult {
         // check if there is already an in-flight request for this key
         val latch = inFlight[idempotencyKey]
