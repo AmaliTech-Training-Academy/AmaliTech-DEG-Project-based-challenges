@@ -51,7 +51,7 @@
             "exec": [
               "pm.test('Status is 200', function() { pm.response.to.have.status(200); });",
               "pm.test('Response contains Charged', function() { pm.expect(pm.response.text()).to.include('Charged 5000 RWF'); });",
-              "pm.test('No X-Cache-Hit header', function() { pm.expect(pm.response.headers.has('X-Cache-Hit')).to.be.false; });"
+              "pm.test('X-Cache-Hit is false', function() { pm.expect(pm.response.headers.get('X-Cache-Hit')).to.equal('false'); });"
             ]
           }
         }

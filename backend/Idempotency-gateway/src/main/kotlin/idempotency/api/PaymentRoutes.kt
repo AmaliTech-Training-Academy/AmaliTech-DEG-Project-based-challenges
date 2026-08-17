@@ -43,11 +43,9 @@ fun Route.paymentRoutes(engine: PaymentEngine) {
             return@post
         }
 
-        val result = engine.processPayment(paymentRequest, idempotencyKey)
+        val result = engine.processPayment(paymentRequest, idempotencyKey, body)
 
-        if (result.cached) {
-            call.response.headers.append("X-Cache-Hit", "true")
-        }
+        call.response.headers.append("X-Cache-Hit", if (result.cached) "true" else "false")
 
         val json = JsonObject().apply {
             addProperty("message", result.message)

@@ -19,7 +19,7 @@ sequenceDiagram
     E->>E: Simulate 2s processing
     E->>S: put("abc123", body, result)
     E-->>API: PaymentResult(200, "Charged 5000 RWF")
-    API-->>C: 200 OK<br/>{"message": "Charged 5000 RWF"}
+    API-->>C: 200 OK<br/>Header: X-Cache-Hit: false<br/>{"message": "Charged 5000 RWF"}
 
     Note over C,S: Duplicate Request (Same Key)
     C->>API: POST /process-payment<br/>Header: Idempotency-Key: abc123<br/>Body: {"amount": 5000, "currency": "RWF"}
@@ -49,6 +49,37 @@ sequenceDiagram
     E-->>E: Request A finishes
     E-->>API: PaymentResult from Request A
     API-->>C: 200 OK (same result as A)
+```
+
+### Component Diagram
+```
+┌─────────────┐
+│   Client    │
+└──────┬──────┘
+       │ POST /process-payment
+       │ Header: Idempotency-Key: abc123
+       │ Body: {"amount": 5000, "currency": "RWF"}
+       ▼
+┌─────────────┐
+│  REST API   │  PaymentRoutes.kt
+│  (Ktor)     │  - Validates header
+│             │  - Parses JSON body
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│   Payment   │  PaymentEngine.kt
+│   Engine    │  - Checks idempotency
+│             │  - Handles concurrency
+│             │  - Processes payment
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  Idempotency│  IdempotencyStore.kt
+│  Store      │  - ConcurrentHashMap
+│             │  - TTL expiration
+└─────────────┘
 ```
 
 ## Setup
@@ -118,6 +149,7 @@ Response:
 ```json
 {"message": "Charged 5000 RWF"}
 ```
+Header `X-Cache-Hit: false` indicates the payment was processed fresh.
 
 Duplicate request (returns cached response):
 ```bash

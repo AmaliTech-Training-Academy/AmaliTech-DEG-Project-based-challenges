@@ -10,11 +10,7 @@ class PaymentEngine(private val store: IdempotencyStore) {
 
     private val inFlight = ConcurrentHashMap<String, InFlightRequest>()
 
-    fun isCached(key: String): Boolean {
-        return store.get(key) != null
-    }
-
-    fun processPayment(body: PaymentRequest, idempotencyKey: String): PaymentResult {
+    fun processPayment(body: PaymentRequest, idempotencyKey: String, requestBody: String): PaymentResult {
         val existing = inFlight[idempotencyKey]
         if (existing != null) {
             existing.latch.await()
@@ -25,7 +21,7 @@ class PaymentEngine(private val store: IdempotencyStore) {
             val cachedResult = store.get(idempotencyKey)
             if (cachedResult != null) {
                 val storedBody = store.getRequestBody(idempotencyKey)
-                if (storedBody != null && storedBody != body.toString()) {
+                if (storedBody != null && storedBody != requestBody) {
                     return PaymentResult(
                         "Idempotency key already used for a different request body.",
                         422
@@ -41,7 +37,7 @@ class PaymentEngine(private val store: IdempotencyStore) {
                 Thread.sleep(2000)
 
                 val result = PaymentResult("Charged ${body.amount} ${body.currency}", 200)
-                store.put(idempotencyKey, body.toString(), result)
+                store.put(idempotencyKey, requestBody, result)
                 inFlightReq.result = result
                 inFlightReq.latch.countDown()
 

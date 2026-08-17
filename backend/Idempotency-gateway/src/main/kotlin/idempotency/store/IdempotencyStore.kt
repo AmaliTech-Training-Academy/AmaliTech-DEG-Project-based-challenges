@@ -60,8 +60,6 @@ class IdempotencyStore {
         entries[key] = StoredEntry(requestBody, result)
     }
 
-    fun size(): Int = entries.size
-
     fun cleanup(): Int {
         var removed = 0
         val now = System.currentTimeMillis()
