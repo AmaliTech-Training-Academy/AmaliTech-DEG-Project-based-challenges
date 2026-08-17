@@ -23,9 +23,15 @@ fun main() {
     val store = IdempotencyStore()
     val engine = PaymentEngine(store)
 
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
-        configure(engine)
-    }.start(wait = true)
+    store.startCleanupThread()
+
+    try {
+        embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+            configure(engine)
+        }.start(wait = true)
+    } finally {
+        store.stopCleanupThread()
+    }
 }
 
 fun Application.configure(engine: PaymentEngine) {

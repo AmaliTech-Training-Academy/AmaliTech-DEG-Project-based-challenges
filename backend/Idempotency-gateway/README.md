@@ -152,7 +152,7 @@ Idempotency keys automatically expire after **24 hours**. This prevents unbounde
 - Keeps memory usage predictable
 
 **Implementation:**
-Each stored entry includes a `createdAt` timestamp. On every access, the store checks if the entry is older than 24 hours and removes it if so (lazy cleanup).
+Each stored entry includes a `createdAt` timestamp. A background daemon thread runs every 60 minutes to scan and remove expired entries. Additionally, lazy cleanup on access provides defense-in-depth.
 
 ## Project Structure
 
