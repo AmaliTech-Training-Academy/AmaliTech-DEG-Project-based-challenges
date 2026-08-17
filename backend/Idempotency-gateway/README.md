@@ -158,13 +158,16 @@ Each stored entry includes a `createdAt` timestamp. On every access, the store c
 
 ```
 src/main/kotlin/idempotency/
-├── App.kt                    # Server setup and configuration
+├── App.kt                        # Server setup and configuration
 ├── api/
-│   └── PaymentRoutes.kt      # HTTP endpoint definitions
+│   └── PaymentRoutes.kt          # HTTP endpoint definitions
 ├── engine/
-│   └── PaymentEngine.kt      # Core idempotency logic
+│   └── PaymentEngine.kt          # Core idempotency logic
 ├── model/
-│   └── Models.kt             # Data classes
+│   ├── PaymentRequest.kt         # Request data class
+│   ├── PaymentResult.kt          # Result data class
+│   └── InFlightRequest.kt        # Tracks in-progress requests
 └── store/
-    └── IdempotencyStore.kt   # In-memory key-value store
+    ├── StoredEntry.kt            # Stored key-value entry
+    └── IdempotencyStore.kt       # In-memory key-value store
 ```
