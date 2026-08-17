@@ -30,7 +30,7 @@ sequenceDiagram
     API-->>C: 200 OK<br/>Header: X-Cache-Hit: true<br/>{"message": "Charged 5000 RWF"}
 
     Note over C,S: Fraud Attempt (Different Body)
-    C->>API: POST /process-payment<br/>Header: Idempotency-Key: abc123<br/>Body: {"amount": 10000, "currency": "USD"}
+    C->>API: POST /process-payment<br/>Header: Idempotency-Key: abc123<br/>Body: {"amount": 10000, "currency": "RWF"}
     API->>E: processPayment(body, key)
     E->>S: get("abc123")
     S-->>E: PaymentResult (cached)
