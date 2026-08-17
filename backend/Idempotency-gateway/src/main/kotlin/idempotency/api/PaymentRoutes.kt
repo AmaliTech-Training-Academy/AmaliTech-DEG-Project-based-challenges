@@ -1,6 +1,7 @@
 package idempotency.api
 
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import idempotency.engine.PaymentEngine
 import idempotency.model.PaymentRequest
 import io.ktor.http.ContentType
@@ -16,8 +17,11 @@ fun Route.paymentRoutes(engine: PaymentEngine) {
     post("/process-payment") {
         val idempotencyKey = call.request.headers["Idempotency-Key"]
         if (idempotencyKey.isNullOrBlank()) {
+            val json = JsonObject().apply {
+                addProperty("error", "Missing Idempotency-Key header")
+            }
             call.respondText(
-                """{"error": "Missing Idempotency-Key header"}""",
+                json.toString(),
                 ContentType.Application.Json,
                 HttpStatusCode.BadRequest
             )
@@ -28,8 +32,11 @@ fun Route.paymentRoutes(engine: PaymentEngine) {
         val paymentRequest = try {
             gson.fromJson(body, PaymentRequest::class.java)
         } catch (e: Exception) {
+            val json = JsonObject().apply {
+                addProperty("error", "Invalid request body")
+            }
             call.respondText(
-                """{"error": "Invalid request body"}""",
+                json.toString(),
                 ContentType.Application.Json,
                 HttpStatusCode.BadRequest
             )
@@ -38,13 +45,15 @@ fun Route.paymentRoutes(engine: PaymentEngine) {
 
         val result = engine.processPayment(paymentRequest, idempotencyKey)
 
-        // set X-Cache-Hit header if this was a cached duplicate
         if (result.cached) {
             call.response.headers.append("X-Cache-Hit", "true")
         }
 
+        val json = JsonObject().apply {
+            addProperty("message", result.message)
+        }
         call.respondText(
-            """{"message": "${result.message}"}""",
+            json.toString(),
             ContentType.Application.Json,
             HttpStatusCode.fromValue(result.statusCode)
         )
