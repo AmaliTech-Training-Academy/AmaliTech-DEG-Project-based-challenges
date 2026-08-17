@@ -7,5 +7,6 @@ data class PaymentRequest(
 
 data class PaymentResult(
     val message: String,
-    val statusCode: Int
+    val statusCode: Int,
+    val cached: Boolean = false
 )

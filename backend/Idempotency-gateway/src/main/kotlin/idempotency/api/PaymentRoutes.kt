@@ -39,7 +39,7 @@ fun Route.paymentRoutes(engine: PaymentEngine) {
         val result = engine.processPayment(paymentRequest, idempotencyKey)
 
         // set X-Cache-Hit header if this was a cached duplicate
-        if (result.statusCode == 200 && engine.isCached(idempotencyKey)) {
+        if (result.cached) {
             call.response.headers.append("X-Cache-Hit", "true")
         }
 
