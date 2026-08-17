@@ -7,7 +7,8 @@ group = "com.finsafe"
 version = "1.0.0"
 
 val ktorVersion = "3.1.3"
-val logbackVersion = "1.5.12"
+val logbackVersion = "1.5.25"
+val nettyVersion = "4.1.132.Final"
 
 application {
     mainClass.set("idempotency.AppKt")
@@ -33,6 +34,14 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "io.netty") {
+            useVersion(nettyVersion)
+        }
+    }
 }
 
 kotlin {
