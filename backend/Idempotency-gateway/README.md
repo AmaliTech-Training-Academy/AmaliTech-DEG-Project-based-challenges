@@ -12,25 +12,25 @@ sequenceDiagram
     participant S as Idempotency Store
 
     Note over C,S: First Request (Happy Path)
-    C->>API: POST /process-payment<br/>Header: Idempotency-Key: abc123<br/>Body: {"amount": 100, "currency": "GHS"}
+    C->>API: POST /process-payment<br/>Header: Idempotency-Key: abc123<br/>Body: {"amount": 5000, "currency": "RWF"}
     API->>E: processPayment(body, key)
     E->>S: get("abc123")
     S-->>E: null (not found)
     E->>E: Simulate 2s processing
     E->>S: put("abc123", body, result)
-    E-->>API: PaymentResult(200, "Charged 100 GHS")
-    API-->>C: 200 OK<br/>{"message": "Charged 100 GHS"}
+    E-->>API: PaymentResult(200, "Charged 5000 RWF")
+    API-->>C: 200 OK<br/>{"message": "Charged 5000 RWF"}
 
     Note over C,S: Duplicate Request (Same Key)
-    C->>API: POST /process-payment<br/>Header: Idempotency-Key: abc123<br/>Body: {"amount": 100, "currency": "GHS"}
+    C->>API: POST /process-payment<br/>Header: Idempotency-Key: abc123<br/>Body: {"amount": 5000, "currency": "RWF"}
     API->>E: processPayment(body, key)
     E->>S: get("abc123")
     S-->>E: PaymentResult (cached)
-    E-->>API: PaymentResult(200, "Charged 100 GHS")
-    API-->>C: 200 OK<br/>Header: X-Cache-Hit: true<br/>{"message": "Charged 100 GHS"}
+    E-->>API: PaymentResult(200, "Charged 5000 RWF")
+    API-->>C: 200 OK<br/>Header: X-Cache-Hit: true<br/>{"message": "Charged 5000 RWF"}
 
     Note over C,S: Fraud Attempt (Different Body)
-    C->>API: POST /process-payment<br/>Header: Idempotency-Key: abc123<br/>Body: {"amount": 500, "currency": "GHS"}
+    C->>API: POST /process-payment<br/>Header: Idempotency-Key: abc123<br/>Body: {"amount": 10000, "currency": "USD"}
     API->>E: processPayment(body, key)
     E->>S: get("abc123")
     S-->>E: PaymentResult (cached)
@@ -91,8 +91,8 @@ Process a payment request with idempotency protection.
 **Request Body:**
 ```json
 {
-    "amount": 100,
-    "currency": "GHS"
+    "amount": 5000,
+    "currency": "RWF"
 }
 ```
 
@@ -100,7 +100,7 @@ Process a payment request with idempotency protection.
 
 | Status | Meaning | Example |
 |--------|---------|---------|
-| 200 | Payment processed successfully | `{"message": "Charged 100 GHS"}` |
+| 200 | Payment processed successfully | `{"message": "Charged 5000 RWF"}` |
 | 400 | Missing header or invalid body | `{"error": "Missing Idempotency-Key header"}` |
 | 422 | Key already used with different body | `{"message": "Idempotency key already used for a different request body."}` |
 
@@ -111,12 +111,12 @@ First request:
 curl -X POST http://localhost:8080/process-payment \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: unique-key-123" \
-  -d '{"amount": 100, "currency": "GHS"}'
+  -d '{"amount": 5000, "currency": "RWF"}'
 ```
 
 Response:
 ```json
-{"message": "Charged 100 GHS"}
+{"message": "Charged 5000 RWF"}
 ```
 
 Duplicate request (returns cached response):
@@ -124,7 +124,7 @@ Duplicate request (returns cached response):
 curl -X POST http://localhost:8080/process-payment \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: unique-key-123" \
-  -d '{"amount": 100, "currency": "GHS"}'
+  -d '{"amount": 5000, "currency": "RWF"}'
 ```
 
 Response includes `X-Cache-Hit: true` header.
