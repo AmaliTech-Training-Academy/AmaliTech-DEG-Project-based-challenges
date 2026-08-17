@@ -3,21 +3,9 @@ package idempotency.store
 import idempotency.model.PaymentResult
 import java.util.concurrent.ConcurrentHashMap
 
-/**
- * In-memory store for idempotency keys.
- *
- * Developer's Choice feature: keys expire after 24 hours to prevent
- * unbounded storage growth in long-running deployments.
- */
 class IdempotencyStore {
 
-    private val ttlMillis = 24 * 60 * 60 * 1000L // 24 hours
-
-    private data class StoredEntry(
-        val requestBody: String,
-        val result: PaymentResult,
-        val createdAt: Long = System.currentTimeMillis()
-    )
+    private val ttlMillis = 24 * 60 * 60 * 1000L
 
     private val entries = ConcurrentHashMap<String, StoredEntry>()
 
