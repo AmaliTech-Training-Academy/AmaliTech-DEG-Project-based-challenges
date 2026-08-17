@@ -196,8 +196,8 @@ src/main/kotlin/idempotency/
 ├── engine/
 │   └── PaymentEngine.kt          # Core idempotency logic
 ├── model/
-│   ├── PaymentRequest.kt         # Request data class
-│   ├── PaymentResult.kt          # Result data class
+│   ├── PaymentRequest.kt         # Request model
+│   ├── PaymentResult.kt          # Result model
 │   └── InFlightRequest.kt        # Tracks in-progress requests
 └── store/
     ├── StoredEntry.kt            # Stored key-value entry
