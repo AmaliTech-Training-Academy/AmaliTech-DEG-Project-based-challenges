@@ -89,6 +89,98 @@
           }
         }
       ]
+    },
+    {
+      "name": "Fraud Attempt (Different Body)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Idempotency-Key",
+            "value": "test-key-001"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount\": 10000, \"currency\": \"USD\"}"
+        },
+        "url": "http://localhost:8080/process-payment"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 422', function() { pm.response.to.have.status(422); });",
+              "pm.test('Error about different body', function() { pm.expect(pm.response.text()).to.include('different request body'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Missing Idempotency-Key",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"amount\": 5000, \"currency\": \"RWF\"}"
+        },
+        "url": "http://localhost:8080/process-payment"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 400', function() { pm.response.to.have.status(400); });",
+              "pm.test('Error about missing header', function() { pm.expect(pm.response.text()).to.include('Missing Idempotency-Key'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invalid JSON Body",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Idempotency-Key",
+            "value": "test-key-002"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "not valid json"
+        },
+        "url": "http://localhost:8080/process-payment"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 400', function() { pm.response.to.have.status(400); });",
+              "pm.test('Error about invalid body', function() { pm.expect(pm.response.text()).to.include('Invalid request body'); });"
+            ]
+          }
+        }
+      ]
     }
   ]
 }
