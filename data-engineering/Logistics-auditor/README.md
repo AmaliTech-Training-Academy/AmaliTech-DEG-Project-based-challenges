@@ -6,6 +6,7 @@ Veridi Logistics engaged this audit to determine whether a spike in negative rev
 ### B. Project Links
 
 - **Link to Notebook:** https://colab.research.google.com/drive/17wdqMqVxUsOALa_hiHBEViWPHJfNrmP9#scrollTo=hTP59EAtRIQ1
+- **link to presentation :** https://drive.google.com/drive/folders/1vqpY1OESNQliJWI5z6mXZInDOOGed9Ws
 
 ### C. Technical Explanation
 
