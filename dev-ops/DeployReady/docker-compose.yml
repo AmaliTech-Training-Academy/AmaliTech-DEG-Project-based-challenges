@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: kora-app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: always
