@@ -43,17 +43,52 @@ fun Route.paymentRoutes(engine: PaymentEngine) {
             return@post
         }
 
-        val result = engine.processPayment(paymentRequest, idempotencyKey, body)
+        if (paymentRequest == null) {
+            val json = JsonObject().apply {
+                addProperty("error", "Invalid request body")
+            }
+            call.respondText(
+                json.toString(),
+                ContentType.Application.Json,
+                HttpStatusCode.BadRequest
+            )
+            return@post
+        }
 
-        call.response.headers.append("X-Cache-Hit", if (result.cached) "true" else "false")
+        val result = validatePaymentRequest(paymentRequest)
+        if (result != null) {
+            val json = JsonObject().apply {
+                addProperty("error", result)
+            }
+            call.respondText(
+                json.toString(),
+                ContentType.Application.Json,
+                HttpStatusCode.BadRequest
+            )
+            return@post
+        }
+
+        val engineResult = engine.processPayment(paymentRequest, idempotencyKey, body)
+
+        call.response.headers.append("X-Cache-Hit", if (engineResult.cached) "true" else "false")
 
         val json = JsonObject().apply {
-            addProperty("message", result.message)
+            addProperty("message", engineResult.message)
         }
         call.respondText(
             json.toString(),
             ContentType.Application.Json,
-            HttpStatusCode.fromValue(result.statusCode)
+            HttpStatusCode.fromValue(engineResult.statusCode)
         )
     }
+}
+
+fun validatePaymentRequest(request: PaymentRequest): String? {
+    if (request.amount <= 0) {
+        return "Amount must be greater than 0"
+    }
+    if (request.currency.isBlank() || !request.currency.matches(Regex("^[A-Z]{3}$"))) {
+        return "Currency must be a 3-letter uppercase code (e.g. RWF, USD)"
+    }
+    return null
 }
