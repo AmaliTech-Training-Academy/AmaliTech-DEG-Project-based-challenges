@@ -1,165 +1,115 @@
-# Project Brief: The "Last Mile" Logistics Auditor
+# VERIDI-LOGISTICS-AUDIT
+Data analysis project on last-mile logistics performance, focusing on delivery delays, customer behavior, and order fulfillment efficiency
 
-**Client:** Veridi Logistics (Global E-Commerce Aggregator)
-**Deliverable:** Public Dashboard, Code Notebook & Insight Presentation
+## A. Executive Summary
 
----
-
-## 1. Business Context
-
-**Veridi Logistics** manages shipping for thousands of online sellers. Recently, the CEO has noticed a spike in negative customer reviews. She has a "gut feeling" that the problem isn't just that packages are late, but that the estimated delivery dates provided to customers are wildly inaccurate (i.e., we are over-promising and under-delivering).
-
-She needs you to audit the delivery data to find the root cause. She specifically wants to know: **"Are we failing specific regions, or is this a nationwide problem?"**
-
-Your job is to build a "Delivery Performance" audit tool that connects the dots between **Logistics Data** (when a package arrived) and **Customer Sentiment** (how they rated the experience).
-
-## 2. The Data
-
-You will use the **Olist E-Commerce Dataset**, a real commercial dataset from a Brazilian marketplace. This is a relational database dump, meaning the data is split across multiple CSV files.
-
-- **Source:** [Kaggle - Olist Brazilian E-Commerce Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
-- **Key Files to Use:**
-  - `olist_orders_dataset.csv` (The central table)
-  - `olist_order_reviews_dataset.csv` (Sentiment)
-  - `olist_customers_dataset.csv` (Location)
-  - `olist_products_dataset.csv` (Categories)
-
-## 3. Tooling Requirements
-
-You have the flexibility to choose your development environment:
-
-- **Option A (Recommended):** Use a cloud-hosted notebook like **Google Colab**, or **Deepnote**, etc.
-- **Option B:** Use a local **Jupyter Notebook** or **VS Code**.
-  - _Condition:_ If you choose this, you must ensure your code is reproducible. Do not reference local file paths (e.g., `C:/Downloads/...`). Assume the dataset is in the same folder as your notebook.
-- **Dashboarding:** The final output must be a **publicly accessible link** (e.g., Tableau Public, Google Looker Studio, Streamlit Cloud, or PowerBI Web, etc.).
+Analysis of 96,000+ delivered orders reveals that remote Northern states (RR, AM, AP) suffer 22–38% late delivery rates vs. ~5% in São Paulo. Each additional day late reduces average customer review score by approximately 0.4 points. The root cause is not operational failure but **systematic over-promising**: estimated delivery dates for remote regions are 5–7 days too optimistic relative to actual carrier performance. On-time orders average 4.18 Stars while super-late orders average 2.8 stars; a statistically significant difference (Kruskal-Wallis p < 0.001). Certain product categories show structurally higher late rates regardless of destination. 
 
 ---
 
-## 4. User Stories & Acceptance Criteria
+## B. Project Links
 
-### Story 1: The Schema Builder
+| Deliverable | Link |
+|---|---|
+| Notebook (Google Colab) | *https://colab.research.google.com/drive/159aMh8dwE_ypGyPu78_pB0iQUhJQz9GR#scrollTo=cell-install* |
+| Dashboard | *https://veridi-logistics-dashboard-egrvhh6gvbvfdjvrkcqfwz.streamlit.app/* |
+| Presentation  | *https://docs.google.com/presentation/d/13Q2j6xQAJRPoOEPdvTWGlnyeuEhmRpuvirXoiRxmLb4/edit?slide=id.g3ebdc9c6ce8_0_508#slide=id.g3ebdc9c6ce8_0_508* |
+| Video Walkthrough | *https://drive.google.com/file/d/1HGywXKVy6bVR5uQQfBGGdIhl_qrRdfcq/view?usp=drivesdk* |
 
-**As a** Data Engineer,
-**I want** to join the Orders, Reviews, and Customers tables into a single master dataset,
-**So that** I can analyze a customer's location and their review score in the same row.
-
-- **Acceptance Criteria:**
-  - Load the raw CSVs into your notebook.
-  - Perform the correct joins (e.g., join Reviews to Orders on `order_id`, join Customers to Orders on `customer_id`).
-  - **Check:** Ensure you don't accidentally duplicate rows (a common error with 1-to-many joins).
-
-### Story 2: The "Real" Delay Calculator
-
-**As a** Logistics Manager,
-**I want** to know the difference between the "Estimated Delivery Date" and the "Actual Delivery Date,"
-**So that** I can see how often we are lying to customers.
-
-- **Acceptance Criteria:**
-  - Create a new calculated column: `Days_Difference` = `order_estimated_delivery_date` - `order_delivered_customer_date`.
-  - Classify orders into statuses: "On Time", "Late", and "Super Late" (> 5 days late).
-  - Handle missing values: Some orders were never delivered (`order_status` = 'canceled' or 'unavailable'). These should be excluded or flagged separately.
-
-### Story 3: The Geographic Heatmap
-
-**As a** Regional Director,
-**I want** to see which specific States (`customer_state`) have the highest percentage of late deliveries,
-**So that** I can focus my repair efforts on the worst regions.
-
-- **Acceptance Criteria:**
-  - Calculate the % of late orders per State.
-  - Visualize this on a map or a bar chart.
-  - **Insight:** Identify if "Remote" states (far from the distribution center) are disproportionately affected.
-
-### Story 4: The Sentiment Correlation
-
-**As a** Customer Success Lead,
-**I want** to see if late deliveries actually cause bad reviews,
-**So that** I can prove to the CEO that logistics is the problem.
-
-- **Acceptance Criteria:**
-  - Create a visualization comparing "Delivery Delay (Days)" vs "Average Review Score (1-5)".
-  - Show the average review score for "On Time" orders vs. "Late" orders.
 
 ---
 
-## 5. Bonus User Story: The "Translation" Challenge
+## C. Technical Explanation
 
-**As a** Global Analyst,
-**I want** to see product categories in **English**, not Portuguese,
-**So that** I can understand if "Furniture" is harder to ship than "Electronics".
+**Data Cleaning:** Removed canceled/unavailable orders from delay analysis (tagged as "Not Delivered" rather than dropped). Deduped reviews by keeping the most recent per `order_id` to prevent row explosion on join. Filtered out null delivery dates. Used `LEFT JOIN` from the orders table throughout so no orders are silently lost. Confirmed row counts with `assert len(Master) == len(orders)` after every join.
 
-- **Acceptance Criteria:**
-  - The `product_category_name` is in Portuguese (e.g., `cama_mesa_banho`).
-  - Use the `product_category_name_translation.csv` file included in the dataset (or create your own mapping) to translate these into English for your final dashboard.
+**Sign convention note (Day_Difference):** Computed as `estimated − actual`, so positive = early arrival, negative = late. Classification (`>= 0` → On Time) is correct under this convention. The Kruskal-Wallis test confirms a statistically significant *difference in distributions* between delivery status groups — this shows strong correlation between delay and lower scores; causality should be validated with further controlled analysis.
+
+**Candidate's Choice (DPRS):** A weighted composite score — `(1 − norm_late_rate) × 50 + (1 − norm_severity) × 30 + norm_review_score × 20` — that quantifies "promise reliability" per state on a 0–100 scale. Business value: gives regional directors a single prioritisation metric instead of three separate KPIs. A state with 10% late orders all 20 days overdue scores lower than one with 20% late orders all 1 day overdue, capturing the severity dimension the CEO cares about.
 
 ---
 
-## 6. The "Candidate's Choice" Challenge
+### Feature Engineering
 
-**As a** Creative Problem Solver,
-**I want** to include one extra feature or analysis that adds specific business value,
-**So that** I can demonstrate my ability to think beyond the basic requirements.
-
-- **Instructions:**
-  - Add one more metric, chart, or drill-down.
-  - **Requirement:** You must justify _why_ this feature matters to the business in your README.
-
----
-
-## 7. Submission Guidelines
-
-Please edit this `README.md` file in your forked repository to include the following three sections at the top:
-
-### A. The Executive Summary
-
-- A 3-5 sentence summary of your findings.
-
-### B. Project Links
-
-- **Link to Notebook:** (e.g., Google Colab, etc.). _Ensure sharing permissions are set to "Anyone with the link can view"._
-- **Link to Dashboard:** (e.g., Tableau Public, etc.).
-- **Link to Presentation:** A link to a short slide deck (PDF/PPT) AND (Optional) a 2-minute video walkthrough (YouTube) explaining your results.
-
-### C. Technical Explanation
-
-- Briefly explain how you handled the "Data Cleaning".
-- Explain your "Candidate's Choice" addition.
-
-**Important Note on Code Submission:**
-
-- Upload your `.ipynb` notebook file to the repo.
-- **Crucial:** Also upload an **HTML or PDF export** of your notebook so we can see your charts even if GitHub fails to render the notebook code.
-- Once you are ready, please fill out the [Official Submission Form Here](https://forms.cloud.microsoft/e/CeQN2mCyUr) with your links
+| Feature | Formula | Purpose |
+|---|---|---|
+| `delivery_delay_days` | `estimated_date − actual_delivery_date` | Positive = early, Negative = late |
+| `delivery_status` | Rule-based on `delivery_delay_days` | On Time / Late / Super Late / Not Delivered |
+| `region_type` | Lookup by `customer_state` | Remote vs Core vs Other |
+| `DPRS` (per state) | Weighted composite (see below) | Single KPI for promise reliability |
 
 ---
 
-## 🛑 CRITICAL: Pre-Submission Checklist
+### Candidate's Choice — Delivery Promise Reliability Score (DPRS)
 
-**Before you submit your form, you MUST complete this checklist.**
+**What it is:** A composite 0–100 score computed per state, measuring how trustworthy Veridi's delivery promises are. It is calculated as:
 
-> ⚠️ **WARNING:** If you miss any of these items, your submission will be flagged as "Incomplete" and you will **NOT** be invited to an interview.
->
-> **We do not accept "permission error" excuses. Test your links in Incognito Mode.**
+```
+DPRS = (1 − norm_late_rate)    × 50
+     + (1 − norm_severity)     × 30
+     + norm_avg_review_score   × 20
+```
 
-### 1. Repository & Code Checks
+Where all components are MinMax-normalised to [0, 1] across all states.
 
-- [ ] **My GitHub Repo is Public.** (Open the link in a Private/Incognito window to verify).
-- [ ] **I have uploaded the `.ipynb` notebook file.**
-- [ ] **I have ALSO uploaded an HTML or PDF export** of the notebook.
-- [ ] **I have NOT uploaded the massive raw dataset.** (Use `.gitignore` or just don't commit the CSV).
-- [ ] **My code uses Relative Paths.**
+**Why it matters to the business:**
 
-### 2. Deliverable Checks
-
-- [ ] **My Dashboard link is publicly accessible.** (No login required).
-- [ ] **My Presentation link is publicly accessible.** (Permissions set to "Anyone with the link can view").
-- [ ] **I have updated this `README.md` file** with my Executive Summary and technical notes.
-
-### 3. Completeness
-
-- [ ] I have completed **User Stories 1-4**.
-- [ ] I have completed the **"Candidate's Choice"** challenge and explained it in the README.
-
-**✅ Only when you have checked every box above, proceed to the submission form.**
+The CEO's concern is specifically about *promise-keeping* — not just raw lateness. Two states could have identical late rates but very different customer experiences: one might have packages arriving 1 day late, the other 20 days late. DPRS captures this severity dimension. It also incorporates the customer's own perception (review score), making it a leading indicator of churn risk. Regional directors receive a single, comparable number that rolls up frequency of failure, severity of failure, and customer-perceived impact — allowing prioritised resource allocation without reading three separate reports.
 
 ---
+
+## D. How to Run the Notebook
+
+### Option A — Google Colab (Recommended)
+
+1. Open the notebook link above
+2. Go to **Runtime → Run All**
+3. When prompted, upload your `kaggle.json` API token
+4. All data downloads automatically; all charts render inline
+
+### Option B — Local Jupyter
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/YOUR_USERNAME/veridi-logistics-audit.git
+cd veridi-logistics-audit
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Place Olist CSVs in data/ folder
+#    (download from https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
+
+# 4. Launch notebook
+jupyter notebook veridi_logistics_audit.ipynb
+```
+
+### requirements.txt
+```
+pandas>=2.0
+numpy>=1.24
+matplotlib>=3.7
+seaborn>=0.12
+plotly>=5.15
+kaleido>=0.2
+scipy>=1.11
+scikit-learn>=1.3
+requests>=2.31
+```
+
+
+---
+
+## E. Dataset Description
+
+| File | Rows | Key Columns |
+|---|---|---|
+| `olist_orders_dataset.csv` | ~99,441 | `order_id`, `order_status`, estimated + actual delivery dates |
+| `olist_order_reviews_dataset.csv` | ~100,000 | `order_id`, `review_score`, `review_comment_message` |
+| `olist_customers_dataset.csv` | ~99,441 | `customer_id`, `customer_state`, `customer_city` |
+| `olist_products_dataset.csv` | ~32,951 | `product_id`, `product_category_name` (Portuguese) |
+| `olist_order_items_dataset.csv` | ~112,650 | `order_id`, `product_id`, pricing |
+| `product_category_name_translation.csv` | 71 | PT → EN category name mapping |
+
+Source: [Kaggle — Olist Brazilian E-Commerce Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
+ E-Commerce Dataset · Analysis by Justine Umutoni*
