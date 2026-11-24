@@ -70,6 +70,16 @@
   white-space: nowrap;
 }
 
+/* Keyboard focus: draw the ring on the row, not around the whole subtree */
+.tree__item:focus-visible {
+  outline: none;
+}
+
+.tree__item:focus-visible > .tree__row {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
 /* Open folder */
 .tree__item[aria-expanded='true'] > .tree__row > .tree__chevron {
   transform: rotate(90deg);

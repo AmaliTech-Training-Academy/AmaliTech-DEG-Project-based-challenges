@@ -1,7 +1,7 @@
 import { el } from '../utils/dom.js';
 import { icon } from '../utils/icons.js';
 
-export function Tree({ nodes, state, onToggle, onSelect }) {
+export function Tree({ nodes, state, onToggle, onSelect, onKeyDown }) {
   // One click listener for the whole tree (event delegation)
   function handleClick(event) {
     const row = event.target.closest('.tree__row');
@@ -12,16 +12,25 @@ export function Tree({ nodes, state, onToggle, onSelect }) {
     else onSelect(item.dataset.id);
   }
 
+  // Only one item can be reached with Tab (roving tabindex)
+  const activeId = state.focusedId ?? nodes[0]?.id;
+
   return el(
     'ul',
-    { className: 'tree', role: 'tree', 'aria-label': 'Vault folders and files', onClick: handleClick },
-    nodes.map((node) => TreeNode({ node, depth: 0, state })),
+    {
+      className: 'tree',
+      role: 'tree',
+      'aria-label': 'Vault folders and files',
+      onClick: handleClick,
+      onKeyDown,
+    },
+    nodes.map((node) => TreeNode({ node, depth: 0, state, activeId })),
   );
 }
 
 // Recursive: an open folder calls TreeNode again for each child.
 // It stops at files and closed folders, so any depth works.
-function TreeNode({ node, depth, state }) {
+function TreeNode({ node, depth, state, activeId }) {
   const isFolder = node.type === 'folder';
   const children = node.children ?? [];
   const isExpanded = isFolder && state.expanded.has(node.id);
@@ -42,7 +51,7 @@ function TreeNode({ node, depth, state }) {
       'ul',
       { className: 'tree__group', role: 'group' },
       children.length > 0
-        ? children.map((child) => TreeNode({ node: child, depth: depth + 1, state }))
+        ? children.map((child) => TreeNode({ node: child, depth: depth + 1, state, activeId }))
         : el('li', { className: 'tree__empty', role: 'none', style: `--depth: ${depth + 1}` }, 'Empty folder'),
     );
   }
@@ -52,6 +61,7 @@ function TreeNode({ node, depth, state }) {
     {
       className: 'tree__item',
       role: 'treeitem',
+      tabindex: node.id === activeId ? '0' : '-1',
       'aria-level': depth + 1,
       'aria-expanded': isFolder ? String(isExpanded) : null,
       'aria-selected': isFolder ? null : String(state.selectedId === node.id),
