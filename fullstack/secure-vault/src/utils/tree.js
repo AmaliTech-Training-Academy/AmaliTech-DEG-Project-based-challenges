@@ -19,6 +19,34 @@ export function getVisibleIds(nodes, expanded, result = []) {
   return result;
 }
 
+// Search. Returns a smaller copy of the tree: the matches plus the folders that lead to them.
+// openIds = folders that hold a match deeper inside, so they must be opened.
+export function filterTree(nodes, query) {
+  const text = query.trim().toLowerCase();
+  const openIds = new Set();
+  let matchCount = 0;
+
+  function visit(list) {
+    const result = [];
+    for (const node of list) {
+      const isMatch = node.name.toLowerCase().includes(text);
+      if (isMatch) matchCount += 1;
+
+      const children = node.type === 'folder' ? visit(node.children ?? []) : [];
+
+      if (children.length > 0) {
+        openIds.add(node.id);
+        result.push({ ...node, children }); // copy, the original data is not changed
+      } else if (isMatch) {
+        result.push(node);
+      }
+    }
+    return result;
+  }
+
+  return { nodes: visit(nodes), openIds, matchCount };
+}
+
 // Folders above a node, from the top level down.
 export function getAncestors(index, id) {
   const ancestors = [];

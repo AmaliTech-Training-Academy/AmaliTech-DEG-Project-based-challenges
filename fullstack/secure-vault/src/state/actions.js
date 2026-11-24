@@ -64,6 +64,14 @@ export function createActions(store, index) {
       store.set({ focusedId: id });
     },
 
+    // Saves the search text and opens the folders that hold matches
+    setQuery(query, openIds) {
+      store.set(({ expanded }) => ({
+        query,
+        expanded: new Set([...expanded, ...openIds]),
+      }));
+    },
+
     setListFilter(filter) {
       store.set({ listFilter: filter });
     },

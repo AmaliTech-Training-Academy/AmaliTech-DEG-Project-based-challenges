@@ -20,9 +20,13 @@ export function handleTreeKey(event, { nodes, index, state, actions }) {
       actions.focusItem(visible[Math.max(position - 1, 0)]);
       break;
     case 'ArrowRight':
-      // Closed folder: open it. Open folder: go to its first child.
-      if (isFolder && !isOpen) actions.expandFolder(id);
-      else if (isOpen && node.children.length > 0) actions.focusItem(node.children[0].id);
+      // Closed folder: open it. Open folder: go to its first visible child.
+      if (isFolder && !isOpen) {
+        actions.expandFolder(id);
+      } else if (isOpen) {
+        const next = visible[position + 1];
+        if (next && index.get(next).parentId === id) actions.focusItem(next);
+      }
       break;
     case 'ArrowLeft':
       // Open folder: close it. Otherwise: go up to the parent folder.

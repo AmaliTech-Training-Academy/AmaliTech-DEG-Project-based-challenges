@@ -79,6 +79,7 @@ function KeyboardHints() {
     hint(['→'], 'expand'),
     hint(['←'], 'collapse'),
     hint(['Enter'], 'open / select'),
+    hint(['/'], 'search'),
   );
 }
 

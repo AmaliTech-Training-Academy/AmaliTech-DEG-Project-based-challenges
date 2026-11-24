@@ -1,0 +1,73 @@
+.searchbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 10px 0 14px;
+  background: var(--color-surface-input);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+}
+
+.searchbox:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-focus-glow);
+}
+
+.searchbox input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+}
+
+.searchbox input::placeholder {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Hide the browser's own clear button, we have ours */
+.searchbox input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.searchbox__clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.searchbox__clear[hidden] {
+  display: none;
+}
+
+.searchbox__clear:hover {
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+}
+
+.searchbox__icon {
+  flex: none;
+}
+
+.search-status {
+  margin: 0;
+  padding: 0 var(--space-1);
+  font-size: var(--text-label);
+  color: var(--color-text-muted);
+}
+
+.tree mark {
+  background: transparent;
+  color: var(--color-brand);
+  font-weight: var(--weight-semibold);
+}

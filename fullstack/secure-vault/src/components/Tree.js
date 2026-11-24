@@ -1,4 +1,4 @@
-import { el } from '../utils/dom.js';
+import { el, highlight } from '../utils/dom.js';
 import { icon } from '../utils/icons.js';
 
 export function Tree({ nodes, state, onToggle, onSelect, onKeyDown }) {
@@ -42,7 +42,7 @@ function TreeNode({ node, depth, state, activeId }) {
       ? icon('chevron', { size: 14, className: 'tree__chevron' })
       : el('span', { className: 'tree__spacer' }),
     icon(isFolder ? 'folder' : 'file', { className: 'tree__icon' }),
-    el('span', { className: 'tree__name' }, node.name),
+    el('span', { className: 'tree__name' }, highlight(node.name, state.query)),
   );
 
   let group = null;

@@ -24,6 +24,15 @@ export function el(tag, props = {}, ...children) {
   return node;
 }
 
+// Wraps the part of the text that matches the search in <mark>.
+export function highlight(text, query) {
+  const start = query ? text.toLowerCase().indexOf(query.trim().toLowerCase()) : -1;
+  if (!query.trim() || start === -1) return [text];
+
+  const end = start + query.trim().length;
+  return [text.slice(0, start), el('mark', {}, text.slice(start, end)), text.slice(end)];
+}
+
 // Replaces the content of a container but keeps focus on the same button.
 // Buttons are matched by their data-key attribute.
 export function renderInto(container, children) {
