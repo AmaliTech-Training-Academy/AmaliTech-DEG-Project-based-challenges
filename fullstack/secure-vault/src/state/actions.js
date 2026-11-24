@@ -9,5 +9,9 @@ export function createActions(store) {
         return { expanded: next };
       });
     },
+
+    selectFile(id) {
+      store.set({ selectedId: id });
+    },
   };
 }
