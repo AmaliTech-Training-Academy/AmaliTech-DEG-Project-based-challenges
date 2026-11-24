@@ -1,0 +1,83 @@
+/*
+ * Design tokens — the single source of truth for the SecureVault design system.
+ * Every colour, font size, space and radius used in the app comes from here.
+ */
+:root {
+  /* ---------- Colour: surfaces (darkest to lightest) ---------- */
+  --color-bg: #011c3a;            /* app background */
+  --color-surface: #0a3a6b;       /* sidebar + properties panel */
+  --color-surface-raised: #0c4277;/* cards, active list row */
+  --color-surface-input: #164c80; /* search field */
+  --color-selected: #2b5d8f;      /* selected tree row */
+
+  /* ---------- Colour: borders ---------- */
+  --color-border: #3e6c99;
+  --color-border-subtle: #0c3360;
+  --color-border-tag: #1f5389;
+
+  /* ---------- Colour: text ---------- */
+  --color-text: #ffffff;
+  --color-text-muted: #c3d5e8;
+  --color-text-faint: #9db7d2;
+  --color-text-inverse: #011c3a;  /* text on accent background */
+
+  /* ---------- Colour: accents ---------- */
+  --color-accent: #7cc4f0;        /* focus ring, open folder, active pill */
+  --color-accent-hover: #b5def7;
+  --color-brand: #5fd4c4;         /* logo */
+  --color-focus-glow: rgba(124, 196, 240, 0.25);
+
+  /* ---------- Colour: file type badges ---------- */
+  --color-type-pdf: #ff8a8a;
+  --color-type-doc: #7cc4f0;
+  --color-type-sheet: #6fdc9b;
+  --color-type-image: #f5c26b;
+  --color-type-code: #c7a6ff;
+  --color-type-other: #c3d5e8;
+
+  /* ---------- Typography ---------- */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  --text-display: 34px;  /* stat numbers */
+  --text-h1: 26px;       /* page title, logo */
+  --text-h2: 16px;       /* properties file name */
+  --text-h3: 15px;       /* section titles */
+  --text-body: 14px;     /* default text, tree rows */
+  --text-small: 13px;    /* chips, buttons */
+  --text-label: 12px;    /* uppercase section labels */
+  --text-mono-sm: 11px;
+  --text-badge: 10px;
+
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --tracking-label: 0.06em;
+
+  /* ---------- Spacing (4px grid) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+
+  /* ---------- Shape ---------- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* ---------- Sizing ---------- */
+  --row-height: 36px;    /* tree row */
+  --tree-indent: 20px;   /* extra left padding per depth level */
+
+  /* ---------- Motion ---------- */
+  --duration-fast: 120ms;
+  --ease-out: ease-out;
+}
