@@ -1,13 +1,4 @@
-/**
- * Tiny helper to create DOM elements without a framework.
- *
- *   el('button', { className: 'pill', onClick: handler }, 'Files')
- *
- * - props starting with "on" become event listeners
- * - className / dataset are handled specially
- * - everything else becomes an HTML attribute
- * - children can be strings, nodes, arrays, or null (skipped)
- */
+// Creates an element. Example: el('button', { className: 'pill', onClick: fn }, 'Files')
 export function el(tag, props = {}, ...children) {
   const node = document.createElement(tag);
 

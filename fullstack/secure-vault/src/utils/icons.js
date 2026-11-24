@@ -1,7 +1,4 @@
-/**
- * Inline SVG icon set (16x16 grid). Icons use `currentColor`,
- * so their colour is controlled from CSS with `color: ...`.
- */
+// SVG icons. They use currentColor, so CSS sets their colour.
 const paths = {
   shield:
     '<path d="M8 1.5 13.5 3.5v4.2c0 3.2-2.3 5.6-5.5 6.8-3.2-1.2-5.5-3.6-5.5-6.8V3.5z"/>' +

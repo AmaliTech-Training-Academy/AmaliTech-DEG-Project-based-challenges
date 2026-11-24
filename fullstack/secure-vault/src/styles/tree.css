@@ -16,7 +16,7 @@
   display: flex;
   flex-direction: column;
   padding: 2px;
-  overflow-x: auto; /* very deep trees scroll sideways instead of breaking */
+  overflow-x: auto;
 }
 
 .tree__group {
@@ -24,11 +24,7 @@
   flex-direction: column;
 }
 
-/*
- * Indentation is computed from the depth, not from nesting.
- * First 6 levels: 20px each. Deeper levels: 10px each,
- * so even 20 levels stay readable in a narrow sidebar.
- */
+/* Indent: 20px per level for the first 6 levels, then 10px, so deep trees still fit */
 .tree__row,
 .tree__empty {
   --indent: calc(6px + min(var(--depth), 6) * var(--tree-indent) + max(var(--depth) - 6, 0) * 10px);
@@ -74,7 +70,7 @@
   white-space: nowrap;
 }
 
-/* Open folder: rotated chevron + accent folder icon */
+/* Open folder */
 .tree__item[aria-expanded='true'] > .tree__row > .tree__chevron {
   transform: rotate(90deg);
 }

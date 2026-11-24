@@ -1,13 +1,4 @@
-/**
- * Minimal state store (same idea as Redux / Zustand, in a few lines).
- *
- * - get()           -> current state object
- * - set(patch)      -> merge a partial update (or a function of the old state)
- * - subscribe(fn)   -> fn(state) runs after every update
- *
- * The UI never changes itself directly: it updates the store,
- * and the store tells the UI to re-render. One direction of data flow.
- */
+// Holds the app state and re-renders the UI when it changes.
 export function createStore(initialState) {
   let state = initialState;
   const listeners = new Set();

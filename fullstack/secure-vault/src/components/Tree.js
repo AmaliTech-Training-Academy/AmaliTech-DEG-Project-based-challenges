@@ -1,20 +1,13 @@
 import { el } from '../utils/dom.js';
 import { icon } from '../utils/icons.js';
 
-/**
- * Root of the file explorer tree.
- * It only renders the top level — each TreeNode renders its own children.
- *
- * Event delegation: instead of one click listener per row (hundreds in a
- * big vault), there is ONE listener on the tree. It finds which row was
- * clicked with closest().
- */
 export function Tree({ nodes, state, onToggle }) {
+  // One click listener for the whole tree (event delegation)
   function handleClick(event) {
     const row = event.target.closest('.tree__row');
     if (!row) return;
 
-    const item = row.parentElement; // the <li role="treeitem">
+    const item = row.parentElement;
     if (item.dataset.type === 'folder') {
       onToggle(item.dataset.id);
     }
@@ -27,14 +20,8 @@ export function Tree({ nodes, state, onToggle }) {
   );
 }
 
-/**
- * RECURSIVE component: renders one node, and if it is an open folder,
- * calls itself for every child with depth + 1.
- *
- * Base case: a file, or a closed folder -> no recursive call.
- * Because there is no hard-coded level, the same code handles
- * 2 levels or 20 levels.
- */
+// Recursive: an open folder calls TreeNode again for each child.
+// It stops at files and closed folders, so any depth works.
 function TreeNode({ node, depth, state }) {
   const isFolder = node.type === 'folder';
   const children = node.children ?? [];

@@ -81,7 +81,7 @@
   }
 }
 
-/* Tablets and phones: stack the columns and let the page scroll */
+/* Small screens: columns stack */
 @media (max-width: 900px) {
   .app {
     flex-direction: column;

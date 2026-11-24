@@ -10,8 +10,7 @@ import { createLayout } from './components/Layout.js';
 import { Tree } from './components/Tree.js';
 
 const store = createStore({
-  // ids of the folders that are currently open
-  expanded: new Set(['root_1', 'leg_1']),
+  expanded: new Set(['root_1', 'leg_1']), // ids of open folders
 });
 const actions = createActions(store);
 
@@ -34,6 +33,6 @@ function render() {
 store.subscribe(render);
 render();
 
-// Temporary placeholders — replaced by real components in the next steps
+// Placeholders for now
 layout.main.textContent = 'Main content';
 layout.properties.textContent = 'Properties';

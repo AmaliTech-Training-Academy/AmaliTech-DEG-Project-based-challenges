@@ -1,7 +1,6 @@
 import { el } from '../utils/dom.js';
 import { icon } from '../utils/icons.js';
 
-/** The SecureVault logo shown at the top of the sidebar. */
 function Brand() {
   return el(
     'div',
@@ -11,10 +10,7 @@ function Brand() {
   );
 }
 
-/**
- * Builds the three-column page shell and returns each region,
- * so other components can render into them.
- */
+// Page with 3 columns. Returns each column so we can render into it.
 export function createLayout() {
   const sidebarBody = el('div', { className: 'sidebar__body' });
   const sidebar = el('nav', { className: 'sidebar', 'aria-label': 'Vault navigation' }, Brand(), sidebarBody);

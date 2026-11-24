@@ -1,4 +1,4 @@
-/* Base styles: reset + global elements, built only on tokens. */
+/* Global styles */
 *,
 *::before,
 *::after {
@@ -34,7 +34,7 @@ a:hover {
   color: var(--color-accent-hover);
 }
 
-/* One consistent focus ring for every interactive element */
+/* Same focus outline everywhere */
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
@@ -49,7 +49,7 @@ kbd {
   padding: 0 5px;
 }
 
-/* Visually hidden but still read by screen readers */
+/* Hidden, but screen readers can read it */
 .sr-only {
   position: absolute;
   width: 1px;
