@@ -1,0 +1,102 @@
+/* Page shell: sidebar | main content | properties panel */
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar,
+.properties {
+  background: var(--color-surface);
+  overflow-y: auto;
+}
+
+.sidebar {
+  flex: 0 0 340px;
+  padding: 22px var(--space-5) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.sidebar__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--space-8) var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+.properties {
+  flex: 0 0 340px;
+  padding: var(--space-8) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ---------- Brand ---------- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 var(--space-1);
+  color: var(--color-brand);
+}
+
+.brand__name {
+  font-size: var(--text-h1);
+  font-weight: var(--weight-light);
+  letter-spacing: -0.01em;
+}
+
+.brand__name strong {
+  font-weight: var(--weight-semibold);
+}
+
+/* ---------- Shared: uppercase section label ---------- */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--space-1);
+  font-size: var(--text-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1200px) {
+  .sidebar,
+  .properties {
+    flex-basis: 290px;
+  }
+}
+
+/* Small screens: columns stack */
+@media (max-width: 900px) {
+  .app {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .sidebar,
+  .properties {
+    flex-basis: auto;
+    overflow: visible;
+  }
+
+  .content {
+    overflow: visible;
+    padding: var(--space-6) var(--space-4);
+  }
+}

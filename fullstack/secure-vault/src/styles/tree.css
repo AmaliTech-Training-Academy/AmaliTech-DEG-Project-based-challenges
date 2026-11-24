@@ -1,0 +1,110 @@
+/* ---------- Recursive file tree ---------- */
+.workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tree,
+.tree__group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree {
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
+  overflow-x: auto;
+}
+
+.tree__group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Indent: 20px per level for the first 6 levels, then 10px, so deep trees still fit */
+.tree__row,
+.tree__empty {
+  --indent: calc(6px + min(var(--depth), 6) * var(--tree-indent) + max(var(--depth) - 6, 0) * 10px);
+}
+
+.tree__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--row-height);
+  min-width: calc(var(--indent) + 180px);
+  padding: 0 10px 0 var(--indent);
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.tree__row:hover {
+  background: var(--color-surface-raised);
+}
+
+.tree__chevron {
+  flex: none;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.tree__spacer {
+  width: 14px;
+  flex: none;
+}
+
+.tree__icon {
+  flex: none;
+}
+
+.tree__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Keyboard focus: draw the ring on the row, not around the whole subtree */
+.tree__item:focus-visible {
+  outline: none;
+}
+
+.tree__item:focus-visible > .tree__row {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+/* Open folder */
+.tree__item[aria-expanded='true'] > .tree__row > .tree__chevron {
+  transform: rotate(90deg);
+}
+
+.tree__item[aria-expanded='true'] > .tree__row > .tree__icon {
+  color: var(--color-accent);
+}
+
+/* Selected file */
+.tree__item[aria-selected='true'] > .tree__row {
+  background: var(--color-selected);
+}
+
+.tree__item[aria-selected='true'] > .tree__row > .tree__icon {
+  color: var(--color-accent);
+}
+
+.tree__item[aria-selected='true'] > .tree__row > .tree__name {
+  font-weight: var(--weight-semibold);
+}
+
+.tree__empty {
+  padding: 0 0 var(--space-1) calc(var(--indent) + 22px);
+  font-size: var(--text-small);
+  font-style: italic;
+  color: var(--color-text-faint);
+}
