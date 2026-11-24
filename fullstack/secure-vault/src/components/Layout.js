@@ -17,7 +17,8 @@ export function createLayout() {
 
   const main = el('main', { className: 'content' });
 
-  const properties = el('aside', { className: 'properties', 'aria-label': 'File properties' });
+  // aria-live: screen readers read the new details when the selection changes
+  const properties = el('aside', { className: 'properties', 'aria-label': 'File properties', 'aria-live': 'polite' });
 
   const root = el('div', { className: 'app' }, sidebar, main, properties);
 

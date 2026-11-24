@@ -79,6 +79,19 @@
   color: var(--color-accent);
 }
 
+/* Selected file */
+.tree__item[aria-selected='true'] > .tree__row {
+  background: var(--color-selected);
+}
+
+.tree__item[aria-selected='true'] > .tree__row > .tree__icon {
+  color: var(--color-accent);
+}
+
+.tree__item[aria-selected='true'] > .tree__row > .tree__name {
+  font-weight: var(--weight-semibold);
+}
+
 .tree__empty {
   padding: 0 0 var(--space-1) calc(var(--indent) + 22px);
   font-size: var(--text-small);

@@ -1,16 +1,15 @@
 import { el } from '../utils/dom.js';
 import { icon } from '../utils/icons.js';
 
-export function Tree({ nodes, state, onToggle }) {
+export function Tree({ nodes, state, onToggle, onSelect }) {
   // One click listener for the whole tree (event delegation)
   function handleClick(event) {
     const row = event.target.closest('.tree__row');
     if (!row) return;
 
     const item = row.parentElement;
-    if (item.dataset.type === 'folder') {
-      onToggle(item.dataset.id);
-    }
+    if (item.dataset.type === 'folder') onToggle(item.dataset.id);
+    else onSelect(item.dataset.id);
   }
 
   return el(
@@ -55,6 +54,7 @@ function TreeNode({ node, depth, state }) {
       role: 'treeitem',
       'aria-level': depth + 1,
       'aria-expanded': isFolder ? String(isExpanded) : null,
+      'aria-selected': isFolder ? null : String(state.selectedId === node.id),
       dataset: { id: node.id, type: node.type },
     },
     row,
