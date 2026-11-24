@@ -4,11 +4,25 @@ import { icon } from '../utils/icons.js';
 /**
  * Root of the file explorer tree.
  * It only renders the top level — each TreeNode renders its own children.
+ *
+ * Event delegation: instead of one click listener per row (hundreds in a
+ * big vault), there is ONE listener on the tree. It finds which row was
+ * clicked with closest().
  */
-export function Tree({ nodes, state }) {
+export function Tree({ nodes, state, onToggle }) {
+  function handleClick(event) {
+    const row = event.target.closest('.tree__row');
+    if (!row) return;
+
+    const item = row.parentElement; // the <li role="treeitem">
+    if (item.dataset.type === 'folder') {
+      onToggle(item.dataset.id);
+    }
+  }
+
   return el(
     'ul',
-    { className: 'tree', role: 'tree', 'aria-label': 'Vault folders and files' },
+    { className: 'tree', role: 'tree', 'aria-label': 'Vault folders and files', onClick: handleClick },
     nodes.map((node) => TreeNode({ node, depth: 0, state })),
   );
 }

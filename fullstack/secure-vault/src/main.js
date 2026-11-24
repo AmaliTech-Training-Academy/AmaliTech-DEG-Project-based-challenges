@@ -5,6 +5,7 @@ import './styles/tree.css';
 import data from '../data.json';
 import { el } from './utils/dom.js';
 import { createStore } from './state/store.js';
+import { createActions } from './state/actions.js';
 import { createLayout } from './components/Layout.js';
 import { Tree } from './components/Tree.js';
 
@@ -12,6 +13,7 @@ const store = createStore({
   // ids of the folders that are currently open
   expanded: new Set(['root_1', 'leg_1']),
 });
+const actions = createActions(store);
 
 const layout = createLayout();
 document.getElementById('app').replaceWith(layout.root);
@@ -24,7 +26,7 @@ function render() {
       'section',
       { className: 'workspace' },
       el('div', { className: 'section-label' }, 'Workspace'),
-      Tree({ nodes: data, state }),
+      Tree({ nodes: data, state, onToggle: actions.toggleFolder }),
     ),
   );
 }
