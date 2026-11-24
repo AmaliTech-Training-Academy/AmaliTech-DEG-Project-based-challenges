@@ -78,6 +78,23 @@
   overflow-wrap: anywhere;
 }
 
+.ghost-button {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.ghost-button:hover {
+  background: var(--color-surface);
+  border-color: var(--color-accent);
+}
+
 .mono {
   font-family: var(--font-mono);
   font-size: var(--text-small);

@@ -23,3 +23,14 @@ export function el(tag, props = {}, ...children) {
 
   return node;
 }
+
+// Replaces the content of a container but keeps focus on the same button.
+// Buttons are matched by their data-key attribute.
+export function renderInto(container, children) {
+  const active = document.activeElement;
+  const key = container.contains(active) ? active.dataset.key : null;
+
+  container.replaceChildren(...children);
+
+  if (key) container.querySelector(`[data-key="${CSS.escape(key)}"]`)?.focus();
+}
