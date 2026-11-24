@@ -8,7 +8,7 @@ function Field(label, value, className = '') {
 }
 
 // Right panel. Shows the selected file, or a message when nothing is selected.
-export function Properties({ node, ancestors }) {
+export function Properties({ node, ancestors, onShowInFolder }) {
   const title = el('h2', { className: 'section-label' }, 'Properties');
 
   if (!node) {
@@ -46,6 +46,11 @@ export function Properties({ node, ancestors }) {
         Field('Size', formatSize(node.size), 'mono'),
         Field('Format', info.format),
         Field('Location', location, 'mono mono--small'),
+      ),
+      el(
+        'button',
+        { type: 'button', className: 'ghost-button', onClick: () => onShowInFolder(node.id) },
+        'Show in folder',
       ),
     ),
   ];

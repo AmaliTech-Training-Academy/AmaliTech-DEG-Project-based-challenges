@@ -3,6 +3,13 @@ import { getAncestors } from '../utils/tree.js';
 // All changes to the state go through these functions.
 // Each one also moves the keyboard focus to the item it acted on.
 export function createActions(store, index) {
+  // Copy of the open folders, plus every folder above the given item.
+  function openParents(expanded, id) {
+    const next = new Set(expanded);
+    getAncestors(index, id).forEach((folder) => next.add(folder.id));
+    return next;
+  }
+
   function setExpanded(id, open) {
     store.set(({ expanded }) => {
       const next = new Set(expanded); // copy, do not change the old Set
@@ -33,11 +40,20 @@ export function createActions(store, index) {
         return;
       }
       store.set(({ expanded }) => {
-        const next = new Set(expanded);
-        getAncestors(index, id).forEach((folder) => next.add(folder.id));
+        const next = openParents(expanded, id);
         next.add(id);
         return { expanded: next, currentFolderId: id, focusedId: id };
       });
+    },
+
+    // "Show in folder": open the path to a file in the tree and select it.
+    revealFile(id) {
+      store.set(({ expanded }) => ({
+        expanded: openParents(expanded, id),
+        currentFolderId: index.get(id).parentId,
+        selectedId: id,
+        focusedId: id,
+      }));
     },
 
     selectFile(id) {

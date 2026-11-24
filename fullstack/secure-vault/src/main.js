@@ -74,11 +74,23 @@ function renderMain(state) {
   );
 }
 
+// Opens the file's folders, then moves keyboard focus to it in the tree
+function showInFolder(id) {
+  actions.revealFile(id);
+  const item = layout.sidebar.querySelector(`[data-id="${id}"]`);
+  item?.focus();
+  item?.scrollIntoView({ block: 'nearest' });
+}
+
 function renderProperties(state) {
   const selected = state.selectedId ? index.get(state.selectedId).node : null;
 
   layout.properties.replaceChildren(
-    ...Properties({ node: selected, ancestors: selected ? getAncestors(index, selected.id) : [] }),
+    ...Properties({
+      node: selected,
+      ancestors: selected ? getAncestors(index, selected.id) : [],
+      onShowInFolder: showInFolder,
+    }),
   );
 }
 
